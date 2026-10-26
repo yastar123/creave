@@ -53,6 +53,73 @@ export function registerCmsRoutes(app: Express, pool: Pool) {
 
   app.use("/api/cms/admin", createAdminGuard(pool));
 
+  app.get("/api/cms/admin/inquiries", async (request, response) => {
+    const parsed = z.object({
+      page: z.coerce.number().int().min(1).max(100_000).default(1),
+      pageSize: z.coerce.number().int().min(1).max(50).default(20),
+      search: z.string().trim().max(120).default(""),
+    }).safeParse(request.query);
+
+    if (!parsed.success) {
+      response.status(400).json({ error: "The inbox search or page is invalid." });
+      return;
+    }
+
+    const { page, pageSize, search } = parsed.data;
+    const offset = (page - 1) * pageSize;
+    const where = search
+      ? `WHERE (
+          POSITION(LOWER($1) IN LOWER(name)) > 0 OR
+          POSITION(LOWER($1) IN LOWER(COALESCE(company, ''))) > 0 OR
+          POSITION(LOWER($1) IN LOWER(email)) > 0 OR
+          POSITION(LOWER($1) IN LOWER(interest)) > 0 OR
+          POSITION(LOWER($1) IN LOWER(message)) > 0
+        )`
+      : "";
+    const countValues = search ? [search] : [];
+    const listValues = search
+      ? [search, pageSize, offset]
+      : [pageSize, offset];
+    const limitParameter = search ? "$2" : "$1";
+    const offsetParameter = search ? "$3" : "$2";
+
+    const [countResult, inquiriesResult] = await Promise.all([
+      pool.query<{ total: string }>(
+        `SELECT COUNT(*)::text AS total
+         FROM public.contact_inquiries
+         ${where}`,
+        countValues,
+      ),
+      pool.query<{
+        id: string;
+        name: string;
+        company: string | null;
+        email: string;
+        phone: string;
+        interest: string;
+        message: string;
+        whatsappOk: boolean;
+        createdAt: Date;
+      }>(
+        `SELECT id, name, company, email, phone, interest, message,
+                whatsapp_ok AS "whatsappOk", created_at AS "createdAt"
+         FROM public.contact_inquiries
+         ${where}
+         ORDER BY created_at DESC, id DESC
+         LIMIT ${limitParameter} OFFSET ${offsetParameter}`,
+        listValues,
+      ),
+    ]);
+
+    response.setHeader("Cache-Control", "no-store");
+    response.json({
+      inquiries: inquiriesResult.rows,
+      total: Number(countResult.rows[0]?.total ?? 0),
+      page,
+      pageSize,
+    });
+  });
+
   app.get("/api/cms/admin/pages", async (_request, response) => {
     const result = await pool.query<{ page_id: string; sections: CmsSection[]; updated_at: Date | null }>(
       "SELECT page_id, sections, updated_at FROM public.cms_pages",

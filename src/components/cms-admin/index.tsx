@@ -8,7 +8,9 @@ import {
   Eye,
   FileText,
   GripVertical,
+  Inbox,
   Layers3,
+  LayoutDashboard,
   LoaderCircle,
   Plus,
   RotateCcw,
@@ -21,16 +23,20 @@ import { CmsSectionPreview } from "@/components/cms-sections";
 import {
   useAdminCmsGlobals,
   useAdminCmsPages,
+  useAdminInquiries,
   useSaveCmsGlobal,
   useSaveCmsPage,
 } from "@/lib/cms-client";
 import { cmsPages, cmsSectionTypes } from "@/lib/cms-shared";
 import type { CmsSection, CmsSectionType } from "@/lib/cms-shared";
+import { CmsInbox } from "./inbox";
+import { CmsOverview } from "./overview";
 
 import "./cms-admin.css";
 
 type GlobalKey = "navbar" | "footer";
 type Selection = { kind: "page"; id: string } | { kind: "global"; id: GlobalKey };
+type AdminView = "overview" | "pages" | "inquiries";
 type SaveState = "saved" | "saving" | "error" | "idle";
 
 const sectionLabels: Record<CmsSectionType, string> = {
@@ -223,9 +229,11 @@ function PageLoading() {
 export function CmsDashboard() {
   const pagesQuery = useAdminCmsPages();
   const globalsQuery = useAdminCmsGlobals();
+  const inquirySummaryQuery = useAdminInquiries({ page: 1, pageSize: 5, search: "" });
   const savePage = useSaveCmsPage();
   const saveGlobal = useSaveCmsGlobal();
 
+  const [activeView, setActiveView] = useState<AdminView>("overview");
   const [selection, setSelection] = useState<Selection>({ kind: "page", id: "home" });
   const [sections, setSections] = useState<CmsSection[]>([]);
   const [globalContent, setGlobalContent] = useState<Record<string, string>>({});
@@ -477,7 +485,29 @@ export function CmsDashboard() {
           <div className="ca-brand-mark">C</div>
           <div><strong>CREVORA</strong><span>STUDIO CMS</span></div>
         </div>
-        <div className="ca-sidebar-label">SITE CONTENT <span>16 PAGES</span></div>
+        <div className="ca-workspace-nav">
+          <div className="ca-sidebar-label">WORKSPACE</div>
+          <button
+            aria-current={activeView === "overview" ? "page" : undefined}
+            className={`ca-nav-item ${activeView === "overview" ? "is-active" : ""}`}
+            onClick={() => setActiveView("overview")}
+            type="button"
+          >
+            <LayoutDashboard size={15} className="ca-nav-icon" />
+            <span>Overview</span>
+          </button>
+          <button
+            aria-current={activeView === "inquiries" ? "page" : undefined}
+            className={`ca-nav-item ${activeView === "inquiries" ? "is-active" : ""}`}
+            onClick={() => setActiveView("inquiries")}
+            type="button"
+          >
+            <Inbox size={15} className="ca-nav-icon" />
+            <span>Inbox</span>
+            {inquirySummaryQuery.data && <span className="ca-nav-count">{inquirySummaryQuery.data.total}</span>}
+          </button>
+        </div>
+        <div className="ca-sidebar-label">SITE CONTENT <span>{cmsPages.length} PAGES</span></div>
         <nav aria-label="CMS content">
           {pageGroups.map((group) => (
             <div className="ca-nav-group" key={group.title}>
@@ -488,11 +518,14 @@ export function CmsDashboard() {
                 const exists = pageRecords.some((record) => record.id === id);
                 return (
                   <button
-                    aria-current={selection.kind === "page" && selection.id === id ? "page" : undefined}
-                    className={`ca-nav-item ${selection.kind === "page" && selection.id === id ? "is-active" : ""}`}
+                    aria-current={activeView === "pages" && selection.kind === "page" && selection.id === id ? "page" : undefined}
+                    className={`ca-nav-item ${activeView === "pages" && selection.kind === "page" && selection.id === id ? "is-active" : ""}`}
                     disabled={!exists}
                     key={id}
-                    onClick={() => choose({ kind: "page", id })}
+                    onClick={() => {
+                      setActiveView("pages");
+                      choose({ kind: "page", id });
+                    }}
                     type="button"
                   >
                     <span className="ca-nav-bullet" />
@@ -508,10 +541,13 @@ export function CmsDashboard() {
           <div className="ca-sidebar-label">SHARED CONTENT</div>
           {(["navbar", "footer"] as const).map((key) => (
             <button
-              aria-current={selection.kind === "global" && selection.id === key ? "page" : undefined}
-              className={`ca-nav-item ${selection.kind === "global" && selection.id === key ? "is-active" : ""}`}
+              aria-current={activeView === "pages" && selection.kind === "global" && selection.id === key ? "page" : undefined}
+              className={`ca-nav-item ${activeView === "pages" && selection.kind === "global" && selection.id === key ? "is-active" : ""}`}
               key={key}
-              onClick={() => choose({ kind: "global", id: key })}
+              onClick={() => {
+                setActiveView("pages");
+                choose({ kind: "global", id: key });
+              }}
               type="button"
             >
               <span className="ca-nav-bullet" />

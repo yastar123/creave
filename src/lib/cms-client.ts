@@ -12,6 +12,25 @@ export type CmsGlobals = {
   footer: Record<string, string>;
 };
 
+export type CmsInquiry = {
+  id: string;
+  name: string;
+  company: string | null;
+  email: string;
+  phone: string;
+  interest: string;
+  message: string;
+  whatsappOk: boolean;
+  createdAt: string;
+};
+
+export type CmsInquiryPage = {
+  inquiries: CmsInquiry[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...init,
@@ -41,6 +60,28 @@ export function useAdminCmsGlobals() {
   return useQuery({
     queryKey: ["cms", "admin", "globals"],
     queryFn: () => requestJson<{ globals: CmsGlobals }>("/api/cms/admin/globals"),
+    retry: false,
+  });
+}
+
+export function useAdminInquiries({
+  page,
+  pageSize,
+  search,
+}: {
+  page: number;
+  pageSize: number;
+  search: string;
+}) {
+  const params = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+    search,
+  });
+
+  return useQuery({
+    queryKey: ["cms", "admin", "inquiries", page, pageSize, search],
+    queryFn: () => requestJson<CmsInquiryPage>(`/api/cms/admin/inquiries?${params}`),
     retry: false,
   });
 }
