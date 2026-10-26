@@ -370,7 +370,7 @@ export function CmsDashboard() {
     if (globalSaveTimer.current) clearTimeout(globalSaveTimer.current);
   }, []);
 
-  function choose(next: Selection) {
+  function flushCurrentSelection() {
     if (pageSaveTimer.current) {
       clearTimeout(pageSaveTimer.current);
       pageSaveTimer.current = null;
@@ -384,6 +384,15 @@ export function CmsDashboard() {
     } else if (selection.kind === "global" && initializedGlobal.current === selection.id) {
       saveGlobalSnapshot(selection.id, latestGlobal.current);
     }
+  }
+
+  function openView(view: AdminView) {
+    if (activeView === "pages" && view !== "pages") flushCurrentSelection();
+    setActiveView(view);
+  }
+
+  function choose(next: Selection) {
+    flushCurrentSelection();
     setSelection(next);
     setSectionError("");
   }
@@ -490,7 +499,7 @@ export function CmsDashboard() {
           <button
             aria-current={activeView === "overview" ? "page" : undefined}
             className={`ca-nav-item ${activeView === "overview" ? "is-active" : ""}`}
-            onClick={() => setActiveView("overview")}
+            onClick={() => openView("overview")}
             type="button"
           >
             <LayoutDashboard size={15} className="ca-nav-icon" />
@@ -499,7 +508,7 @@ export function CmsDashboard() {
           <button
             aria-current={activeView === "inquiries" ? "page" : undefined}
             className={`ca-nav-item ${activeView === "inquiries" ? "is-active" : ""}`}
-            onClick={() => setActiveView("inquiries")}
+            onClick={() => openView("inquiries")}
             type="button"
           >
             <Inbox size={15} className="ca-nav-icon" />
@@ -563,44 +572,65 @@ export function CmsDashboard() {
 
       <section className="ca-workspace">
         <header className="ca-topbar">
-          <div className="ca-breadcrumb"><span>CONTENT</span><i>/</i><strong>{selection.kind === "page" ? pageMeta?.title : globalTitle}</strong></div>
-          <label className="ca-mobile-select-wrap">
-            <span className="ca-visually-hidden">Choose content</span>
-            <select
-              aria-label="Choose page or shared content"
-              className="ca-mobile-selector"
-              onChange={(event) => {
-                const [kind, id = ""] = event.target.value.split(":");
-                if (kind === "global" && (id === "navbar" || id === "footer")) choose({ kind: "global", id });
-                if (kind === "page" && id) choose({ kind: "page", id });
-              }}
-              value={`${selection.kind}:${selection.id}`}
-            >
-              <optgroup label="Pages">
-                {cmsPages.filter((page) => pageRecords.some((record) => record.id === page.id)).map((page) => (
-                  <option key={page.id} value={`page:${page.id}`}>{page.title}</option>
-                ))}
-              </optgroup>
-              <optgroup label="Shared content">
-                <option value="global:navbar">Navigation</option>
-                <option value="global:footer">Footer</option>
-              </optgroup>
-            </select>
-          </label>
-          <div className={`ca-save-status status-${currentStatus}`} aria-live="polite">
-            {currentStatus === "saving" ? <LoaderCircle size={15} className="ca-spin" /> :
-              currentStatus === "error" ? <CircleAlert size={15} /> : <Check size={15} />}
-            <span>{statusLabel(currentStatus)}</span>
+          <div className="ca-breadcrumb">
+            <span>{activeView === "overview" ? "WORKSPACE" : activeView === "inquiries" ? "INBOX" : "CONTENT"}</span>
+            <i>/</i>
+            <strong>{activeView === "overview" ? "Overview" : activeView === "inquiries" ? "Contact requests" : selection.kind === "page" ? pageMeta?.title : globalTitle}</strong>
           </div>
+          {activeView === "pages" && (
+            <>
+              <label className="ca-mobile-select-wrap">
+                <span className="ca-visually-hidden">Choose content</span>
+                <select
+                  aria-label="Choose page or shared content"
+                  className="ca-mobile-selector"
+                  onChange={(event) => {
+                    const [kind, id = ""] = event.target.value.split(":");
+                    if (kind === "global" && (id === "navbar" || id === "footer")) choose({ kind: "global", id });
+                    if (kind === "page" && id) choose({ kind: "page", id });
+                  }}
+                  value={`${selection.kind}:${selection.id}`}
+                >
+                  <optgroup label="Pages">
+                    {cmsPages.filter((page) => pageRecords.some((record) => record.id === page.id)).map((page) => (
+                      <option key={page.id} value={`page:${page.id}`}>{page.title}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Shared content">
+                    <option value="global:navbar">Navigation</option>
+                    <option value="global:footer">Footer</option>
+                  </optgroup>
+                </select>
+              </label>
+              <div className={`ca-save-status status-${currentStatus}`} aria-live="polite">
+                {currentStatus === "saving" ? <LoaderCircle size={15} className="ca-spin" /> :
+                  currentStatus === "error" ? <CircleAlert size={15} /> : <Check size={15} />}
+                <span>{statusLabel(currentStatus)}</span>
+              </div>
+            </>
+          )}
         </header>
 
-        {mutationError && (
+        {activeView === "pages" && mutationError && (
           <div className="ca-save-error" role="alert">
             <CircleAlert size={16} /><span>{mutationError}</span>
             <button onClick={() => setMutationError("")} aria-label="Dismiss error" type="button"><X size={15} /></button>
           </div>
         )}
 
+        {activeView === "overview" ? (
+          <CmsOverview
+            pages={pageRecords}
+            inquiries={inquirySummaryQuery.data}
+            inquiriesLoading={inquirySummaryQuery.isLoading}
+            inquiriesError={inquirySummaryQuery.isError}
+            onRetryInquiries={() => void inquirySummaryQuery.refetch()}
+            onOpenPages={() => openView("pages")}
+            onOpenInbox={() => openView("inquiries")}
+          />
+        ) : activeView === "inquiries" ? (
+          <CmsInbox />
+        ) : (
         <div className="ca-content-layout">
           <div className="ca-editor-column">
             <div className="ca-page-heading">
@@ -784,6 +814,7 @@ export function CmsDashboard() {
             )}
           </aside>
         </div>
+        )}
       </section>
     </main>
   );
