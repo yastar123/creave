@@ -32,13 +32,10 @@ export const projects: Project[] = [
 ];
 
 // Client logos shown in "Trusted By". Only add logos you have permission to use.
-export const trustedBy: { name: string; logo?: string; url?: string }[] = [
-  { name: 'Namib Roasters', logo: 'https://cdn.simpleicons.org/starbucks/1a1a1a' }, { name: 'Kalahari Living', logo: 'https://cdn.simpleicons.org/airbnb/1a1a1a' }, { name: 'Swakop Surf Co.', logo: 'https://cdn.simpleicons.org/surfshark/1a1a1a' }, { name: 'Etosha Lodge', logo: 'https://cdn.simpleicons.org/tripadvisor/1a1a1a' }, { name: 'Windhoek Dental', logo: 'https://cdn.simpleicons.org/hilton/1a1a1a' }, { name: 'Oryx Motors', logo: 'https://cdn.simpleicons.org/toyota/1a1a1a' },
-]; // dummy names until real, approved client logos are supplied
+export const trustedBy: { name: string; logo?: string; url?: string }[] = [];
 
-export const socials = [
-  { name: 'Instagram', url: 'https://instagram.com/crevora' }, { name: 'TikTok', url: 'https://tiktok.com/@crevora' }, { name: 'LinkedIn', url: 'https://linkedin.com/company/crevora' }, { name: 'Facebook', url: 'https://facebook.com/crevora' },
-]; // dummy links
+// Add only verified CREVORA social profiles here.
+export const socials: { name: string; url: string }[] = [];
 
 export type Article = { slug: string; category: string; title: string; excerpt: string; date: string; author: string; body: string[]; related: { label: string; to: string }; image?: string; imageAlt?: string };
 export const articles: Article[] = [

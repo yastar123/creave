@@ -16,6 +16,12 @@ export const getRouter = (initialUrl?: string) => {
     defaultPreloadStaleTime: 0,
   });
 
+  // This app uses a custom SSR entry point, so it does not install the router's
+  // generated hydration manifest. Keep RouterProvider in SSR mode on the client
+  // so it renders the same match tree instead of adding a client-only Suspense
+  // boundary during hydration.
+  router.ssr = { manifest: undefined };
+
   return router;
 };
 
