@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { ArrowUpRight, MessageCircle } from 'lucide-react';
-import { z } from 'zod';
+import * as z from 'zod';
 import { StudioShell, whatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
 import { services, pageHead } from '@/lib/studio-content';
 
-type FieldKey = 'name' | 'company' | 'email' | 'phone' | 'interest' | 'message';
+type FieldKey = 'name' | 'company' | 'email' | 'phone' | 'interest' | 'message' | 'privacyConsent';
 
 const schema = z.object({
   name: z.string().trim().min(2, 'Please tell us your name.').max(100, 'Please keep this under 100 characters.'),
@@ -16,6 +16,7 @@ const schema = z.object({
   interest: z.string().min(1, 'Please choose what you’d like to talk about.'),
   message: z.string().trim().min(10, 'Tell us a little more — at least 10 characters.').max(1000, 'Please keep this under 1000 characters.'),
   whatsappOk: z.boolean(),
+  privacyConsent: z.boolean().refine(value => value, 'Please agree to the privacy notice before submitting.'),
 });
 
 function Field({ label, error, children }: { label: string; error?: string | undefined; children: ReactNode }) {
@@ -28,19 +29,23 @@ export const Route = createFileRoute('/contact')({
 });
 
 function Contact() {
-  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', interest: services[0]!.title, message: '', whatsappOk: true });
+  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', interest: services[0]!.title, message: '', whatsappOk: true, privacyConsent: false });
   const [hp, setHp] = useState('');
-  const [startedAt] = useState(() => Date.now());
-  const [status, setStatus] = useState<'idle' | 'sent' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
+  const [submitError, setSubmitError] = useState('');
+  const [whatsappUrl, setWhatsappUrl] = useState('');
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
     setForm(f => ({ ...f, [key]: value }));
     setErrors(prev => { const next = { ...prev }; delete next[key as FieldKey]; return next; });
+    setStatus('idle');
+    setSubmitError('');
+    setWhatsappUrl('');
   };
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (hp || Date.now() - startedAt < 3000) { setStatus('error'); return; }
+    if (hp) { setStatus('sent'); return; }
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
       const next: Partial<Record<FieldKey, string>> = {};
@@ -50,20 +55,40 @@ function Contact() {
       return;
     }
     const v = parsed.data;
-    const text = [
-      `Hi CREVORA! I’m ${v.name}.`,
-      v.company && `Brand / Company: ${v.company}`,
-      `Email: ${v.email}`,
-      `Phone: ${v.phone}`,
-      `Interested in: ${v.interest}`,
-      '',
-      v.message,
-      '',
-      `Open to being contacted via WhatsApp: ${v.whatsappOk ? 'Yes' : 'No'}`,
-    ].filter(Boolean).join('\n');
-    const win = window.open(`https://wa.me/264815781719?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
-    void win;
-    setStatus('sent');
+    setStatus('sending');
+    setSubmitError('');
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...v, honeypot: hp }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => null) as { error?: string } | null;
+        setSubmitError(result?.error ?? 'We could not save your enquiry right now. Please try again shortly.');
+        setStatus('error');
+        return;
+      }
+
+      const text = [
+        `Hi CREVORA! I’m ${v.name}.`,
+        v.company && `Brand / Company: ${v.company}`,
+        `Email: ${v.email}`,
+        `Phone: ${v.phone}`,
+        `Interested in: ${v.interest}`,
+        '',
+        v.message,
+        '',
+        `Open to being contacted via WhatsApp: ${v.whatsappOk ? 'Yes' : 'No'}`,
+      ].filter(Boolean).join('\n');
+      setWhatsappUrl(`https://wa.me/264815781719?text=${encodeURIComponent(text)}`);
+      setStatus('sent');
+    } catch {
+      setSubmitError('We could not save your enquiry right now. Please try again shortly.');
+      setStatus('error');
+    }
   }
 
   return <StudioShell>
@@ -119,12 +144,18 @@ function Contact() {
           <textarea required maxLength={1000} value={form.message} onChange={e => set('message', e.target.value)} placeholder="Share a bit about your brand, what you’re trying to achieve, or what feels unclear right now. There’s no need to have everything figured out." aria-invalid={!!errors.message} />
         </Field>
         <label className="contact-consent"><input type="checkbox" checked={form.whatsappOk} onChange={e => set('whatsappOk', e.target.checked)} /> I’m open to being contacted via WhatsApp</label>
-        <p className="contact-form-note">Your message opens in WhatsApp. Review it there before sending.</p>
-        <Button variant="studio" type="submit">Start the conversation <ArrowUpRight /></Button>
+        <label className="contact-consent contact-privacy-consent">
+          <input type="checkbox" checked={form.privacyConsent} onChange={e => set('privacyConsent', e.target.checked)} aria-invalid={!!errors.privacyConsent} aria-describedby={errors.privacyConsent ? 'privacy-consent-error' : undefined} />
+          <span>I agree that CREVORA may store my details and message to respond to this enquiry. Read the <a href="/privacy-policy" target="_blank" rel="noreferrer">Privacy Policy</a>.</span>
+        </label>
+        {errors.privacyConsent && <span id="privacy-consent-error" className="contact-error">{errors.privacyConsent}</span>}
+        <p className="contact-form-note">Your enquiry is stored in PostgreSQL so CREVORA can follow up. After it is saved, you can continue to WhatsApp to send your message.</p>
+        {status !== 'sent' && <Button variant="studio" type="submit" disabled={status === 'sending'}>{status === 'sending' ? 'Saving your enquiry…' : 'Save enquiry'} <ArrowUpRight /></Button>}
         <div role="status" aria-live="polite">
-          {status === 'sent' && <p className="form-message form-message-success">Thank you! Your message is ready in WhatsApp — just press send. We usually reply within one business day.</p>}
-          {status === 'error' && <p className="form-message form-message-error">{Object.keys(errors).length ? 'Please check the highlighted fields and try again.' : 'Something went wrong. Please try again, or chat with us directly on WhatsApp.'}</p>}
+          {status === 'sent' && <p className="form-message form-message-success">Thank you! Your enquiry has been saved. Continue to WhatsApp to review and send your message.</p>}
+          {status === 'error' && <p className="form-message form-message-error">{Object.keys(errors).length ? 'Please check the highlighted fields and try again.' : submitError || 'Something went wrong. Please try again, or chat with us directly on WhatsApp.'}</p>}
         </div>
+        {status === 'sent' && whatsappUrl && <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Continue to WhatsApp <ArrowUpRight /></a></Button>}
       </form>
     </section>
   </StudioShell>;

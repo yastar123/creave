@@ -4,13 +4,11 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
-  HeadContent,
-  Scripts,
+  useRouterState,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect } from "react";
 
-import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -70,55 +68,81 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "CREVORA — Creative with purpose" },
-      { name: "description", content: "Social media marketing, branding and creative direction in Windhoek, Namibia." },
-      { name: "author", content: "CREVORA" },
-      { property: "og:title", content: "CREVORA — Creative with purpose" },
-      { property: "og:description", content: "Social media marketing, branding and creative direction in Windhoek, Namibia." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" },
-    ],
-  }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
-function RootShell({ children }: { children: ReactNode }) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <HeadContent />
-        <script dangerouslySetInnerHTML={{ __html: "try{if(sessionStorage.getItem('crevora-intro'))document.documentElement.classList.add('intro-seen')}catch(e){}" }} />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <RouteMetadata />
       <Outlet />
     </QueryClientProvider>
   );
+}
+
+type RouteMetaEntry = {
+  title?: string;
+  name?: string;
+  property?: string;
+  content?: string;
+};
+
+type RouteScriptEntry = {
+  type?: string;
+  children?: string;
+};
+
+function RouteMetadata() {
+  const router = useRouter();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  useEffect(() => {
+    const currentMatch = router.state.matches.at(-1);
+    const route = (currentMatch
+      ? router.routesById[currentMatch.routeId]
+      : undefined) as unknown as {
+      options?: {
+        head?: (context: { loaderData: unknown }) => {
+          meta?: RouteMetaEntry[];
+          scripts?: RouteScriptEntry[];
+        };
+      };
+    };
+    const routeHead = route.options?.head?.({ loaderData: currentMatch?.loaderData });
+    const meta = routeHead?.meta ?? [];
+    const scripts = routeHead?.scripts ?? [];
+
+    document.head.querySelectorAll("[data-route-meta]").forEach((element) => element.remove());
+
+    for (const entry of meta) {
+      if (entry.title) {
+        document.title = entry.title;
+      }
+
+      if ((!entry.name && !entry.property) || !entry.content) {
+        continue;
+      }
+
+      const element = document.createElement("meta");
+      if (entry.name) element.setAttribute("name", entry.name);
+      if (entry.property) element.setAttribute("property", entry.property);
+      element.setAttribute("content", entry.content);
+      element.dataset["routeMeta"] = "true";
+      document.head.append(element);
+    }
+
+    for (const entry of scripts) {
+      const element = document.createElement("script");
+      if (entry.type) element.type = entry.type;
+      element.textContent = entry.children ?? "";
+      element.dataset["routeMeta"] = "true";
+      document.head.append(element);
+    }
+  }, [pathname, router]);
+
+  return null;
 }

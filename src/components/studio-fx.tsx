@@ -25,7 +25,7 @@ export function StudioFx({ pathname }: { pathname: string }) {
   useEffect(() => {
     const root = document.documentElement;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (phase === 'done' || reduce || sessionStorage.getItem('crevora-intro')) { setPhase('done'); root.classList.remove('is-intro'); return; }
+    if (phase === 'done' || reduce) { setPhase('done'); root.classList.remove('is-intro'); return; }
     root.classList.add('is-intro');
     const start = performance.now();
     let raf = 0;
@@ -33,7 +33,7 @@ export function StudioFx({ pathname }: { pathname: string }) {
       const p = Math.min((t - start) / 1500, 1);
       setCount(Math.round((1 - Math.pow(1 - p, 3)) * 100));
       if (p < 1) raf = requestAnimationFrame(tick);
-      else { setPhase('exit'); root.classList.remove('is-intro'); sessionStorage.setItem('crevora-intro', '1'); setTimeout(() => setPhase('done'), 1100); }
+      else { setPhase('exit'); root.classList.remove('is-intro'); setTimeout(() => setPhase('done'), 1100); }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
