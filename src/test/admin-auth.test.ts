@@ -130,7 +130,7 @@ describe("CMS admin login API", () => {
 
     const logout = await fetch(`${origin}/api/auth/logout`, { method: "POST" });
     expect(logout.status).toBe(200);
-    expect(logout.headers.get("set-cookie")).toContain("Max-Age=0");
+    expect(logout.headers.get("set-cookie")).toContain("Expires=Thu, 01 Jan 1970 00:00:00 GMT");
   });
 
   it("rejects requests when the administrator credentials are not configured", async () => {
