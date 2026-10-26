@@ -12,6 +12,7 @@ import {
   Layers3,
   LayoutDashboard,
   LoaderCircle,
+  LogOut,
   Plus,
   RotateCcw,
   Save,
@@ -226,7 +227,7 @@ function PageLoading() {
   );
 }
 
-export function CmsDashboard() {
+export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
   const pagesQuery = useAdminCmsPages();
   const globalsQuery = useAdminCmsGlobals();
   const inquirySummaryQuery = useAdminInquiries({ page: 1, pageSize: 5, search: "" });
@@ -609,6 +610,9 @@ export function CmsDashboard() {
               </div>
             </>
           )}
+          <button className="ca-logout-button" onClick={onLogout} type="button">
+            <LogOut size={14} /> Sign out
+          </button>
         </header>
 
         {activeView === "pages" && mutationError && (
@@ -621,7 +625,7 @@ export function CmsDashboard() {
         {activeView === "overview" ? (
           <CmsOverview
             pages={pageRecords}
-            inquiries={inquirySummaryQuery.data}
+            {...(inquirySummaryQuery.data ? { inquiries: inquirySummaryQuery.data } : {})}
             inquiriesLoading={inquirySummaryQuery.isLoading}
             inquiriesError={inquirySummaryQuery.isError}
             onRetryInquiries={() => void inquirySummaryQuery.refetch()}

@@ -67,6 +67,8 @@
 .ca-save-status { display: inline-flex; align-items: center; gap: 7px; color: #62803a; font-size: 11px; }
 .ca-save-status.status-saving { color: #72776d; }
 .ca-save-status.status-error { color: var(--ca-warn); }
+.ca-logout-button { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 10px; border: 1px solid var(--ca-line); background: transparent; color: #41453f; font-size: 11px; cursor: pointer; }
+.ca-logout-button:hover { background: #fff; }
 .ca-spin { animation: ca-spin 1s linear infinite; }
 @keyframes ca-spin { to { transform: rotate(360deg); } }
 .ca-save-error { display: flex; align-items: center; gap: 9px; margin: 15px clamp(22px, 4vw, 54px) 0; padding: 11px 13px; border: 1px solid #ecc9c2; background: #fff3f0; color: #90483e; font-size: 12px; }

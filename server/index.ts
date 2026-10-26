@@ -8,12 +8,9 @@ import { rateLimit } from "express-rate-limit";
 import { Pool } from "pg";
 import * as z from "zod";
 import type { ViteDevServer } from "vite";
-import cors from "cors";
-import { clerkMiddleware } from "@clerk/express";
-import { publishableKeyFromHost } from "@clerk/shared/keys";
 import type { RenderedPage } from "../src/entry-server";
 import { registerCmsRoutes } from "./cms";
-import { CLERK_PROXY_PATH, clerkProxyMiddleware, getClerkProxyHost } from "./middlewares/clerkProxyMiddleware";
+import { registerAuthRoutes } from "./auth";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const clientDirectory = path.join(projectRoot, "dist", "client");
@@ -32,18 +29,9 @@ let productionRenderer: Promise<{ renderPage: (url: string) => Promise<RenderedP
 
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
-app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
-app.use(cors({ credentials: true, origin: true }));
 app.use(express.json({ limit: "12kb" }));
-app.use(
-  clerkMiddleware((request) => ({
-    publishableKey: publishableKeyFromHost(
-      getClerkProxyHost(request) ?? "",
-      process.env["CLERK_PUBLISHABLE_KEY"],
-    ),
-  })),
-);
 
+registerAuthRoutes(app);
 registerCmsRoutes(app, pool);
 
 const contactSchema = z.object({

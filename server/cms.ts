@@ -1,8 +1,8 @@
-import { clerkClient, getAuth } from "@clerk/express";
 import type { Express, NextFunction, Request, Response } from "express";
 import type { Pool } from "pg";
 import * as z from "zod";
 import { cmsPages, cmsPageIds, cmsSectionTypes, type CmsSection } from "../src/lib/cms-shared";
+import { getAdminSession } from "./auth";
 
 export const cmsSectionSchema = z.object({
   id: z.string().trim().min(1).max(80).regex(/^[a-zA-Z0-9_-]+$/),
@@ -51,7 +51,7 @@ export function registerCmsRoutes(app: Express, pool: Pool) {
     });
   });
 
-  app.use("/api/cms/admin", createAdminGuard(pool));
+  app.use("/api/cms/admin", createAdminGuard());
 
   app.get("/api/cms/admin/inquiries", async (request, response) => {
     const parsed = z.object({
@@ -221,46 +221,14 @@ export function registerCmsRoutes(app: Express, pool: Pool) {
   });
 }
 
-function createAdminGuard(pool: Pool) {
+function createAdminGuard() {
   return async (request: Request, response: Response, next: NextFunction) => {
-    const { userId } = getAuth(request);
-    if (!userId) {
+    const session = getAdminSession(request);
+    if (!session) {
       response.status(401).json({ error: "Sign in to manage site content." });
       return;
     }
 
-    try {
-      const user = await clerkClient.users.getUser(userId);
-      const primaryEmail = user.emailAddresses.find(
-        (email) => email.id === user.primaryEmailAddressId && email.verification?.status === "verified",
-      )?.emailAddress;
-
-      if (!primaryEmail) {
-        response.status(403).json({ error: "A verified primary email is required for CMS access." });
-        return;
-      }
-
-      const configuredEmails = (process.env["CMS_ADMIN_EMAIL"] ?? "")
-        .split(",")
-        .map((email) => email.trim().toLowerCase())
-        .filter(Boolean);
-      let isAllowed = configuredEmails.includes(primaryEmail.toLowerCase());
-      if (!isAllowed) {
-        const allowed = await pool.query(
-          "SELECT 1 FROM public.cms_admins WHERE LOWER(email) = LOWER($1) LIMIT 1",
-          [primaryEmail],
-        );
-        isAllowed = allowed.rowCount !== 0;
-      }
-      if (!isAllowed) {
-        response.status(403).json({ error: "This account is not authorized to manage site content." });
-        return;
-      }
-
-      next();
-    } catch (error) {
-      console.error("CMS admin authorization failed:", error);
-      response.status(503).json({ error: "CMS authorization is temporarily unavailable." });
-    }
+    next();
   };
 }

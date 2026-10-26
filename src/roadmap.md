@@ -1,3 +1,3 @@
 - [x] Brief: official 4 services, How We Work 5 steps, journal article pages, Our Work + case study pages, social media portfolio, Trusted By slot, custom 404, maintenance page.
-- [ ] CMS + admin login (waiting for user to start this phase)
+- [x] CMS + admin login (JWT email/password; configure the admin email and password in Replit before signing in)
 - [ ] Trusted By logos, social media links (waiting for user)

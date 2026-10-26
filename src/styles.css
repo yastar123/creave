@@ -1,4 +1,4 @@
-@layer theme, base, clerk, components, utilities;
+@layer theme, base, components, utilities;
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -1483,6 +1483,13 @@ img[loading="lazy"] { border-radius: inherit; }
 .auth-card > h1 { margin: 0 0 12px; font-size: clamp(32px, 6vw, 52px); line-height: 1.05; letter-spacing: -.045em; }
 .auth-card > p { max-width: 420px; margin: 0 0 30px; color: #b8b8b5; font-size: 14px; line-height: 1.6; }
 .auth-loading { color: #b8b8b5; font: 11px/1.5 var(--font-detail); }
+.auth-form { display: grid; gap: 18px; max-width: 420px; }
+.auth-form label { display: grid; gap: 8px; color: #d5d5d2; font: 11px/1.4 var(--font-detail); letter-spacing: .04em; }
+.auth-form input { width: 100%; min-height: 48px; padding: 0 14px; border: 1px solid #454543; border-radius: 0; outline: none; background: #161616; color: #fff; font: 14px/1.4 var(--font-body); }
+.auth-form input:focus { border-color: #b9d95a; box-shadow: 0 0 0 1px #b9d95a; }
+.auth-submit { min-height: 50px; margin-top: 4px; border: 0; background: #f2f2f0; color: #0b0b0c; font: 11px/1 var(--font-detail); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+.auth-submit:disabled { opacity: .65; cursor: wait; }
+.auth-error { margin: 0 !important; color: #ffb3a6 !important; font-size: 12px !important; }
 
 .cms-public-sections { display: grid; }
 .cms-public-section { display: grid; gap: 20px; padding: clamp(48px, 8vw, 110px) var(--gutter); border-top: 1px solid var(--studio-line); background: var(--studio-paper); }
