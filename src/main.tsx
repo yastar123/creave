@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { RouterProvider } from "@tanstack/react-router";
 
+import { AuthProvider } from "./components/auth-provider";
 import { getRouter } from "./router";
 import "./styles.css";
 
@@ -18,7 +19,9 @@ void router.load().then(
     hydrateRoot(
       rootElement,
       <StrictMode>
-        <RouterProvider router={router} />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </StrictMode>,
     );
   },
@@ -26,7 +29,9 @@ void router.load().then(
     console.error("The application could not load its initial route.", error);
     createRoot(rootElement).render(
       <StrictMode>
-        <RouterProvider router={router} />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </StrictMode>,
     );
   },

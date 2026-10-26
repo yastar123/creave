@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as BrandIdentityNamibiaRouteImport } from './routes/brand-identity-namibia'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CreativeVisualsMotionNamibiaRouteImport } from './routes/creative-visuals-motion-namibia'
@@ -18,12 +19,16 @@ import { Route as JournalRouteImport } from './routes/journal'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SocialMediaManagementNamibiaRouteImport } from './routes/social-media-management-namibia'
 import { Route as SocialMediaPortfolioRouteImport } from './routes/social-media-portfolio'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WebSolutionsNamibiaRouteImport } from './routes/web-solutions-namibia'
 import { Route as WorkRouteImport } from './routes/work'
 import { Route as JournalSlugRouteImport } from './routes/journal_.$slug'
+import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
+import { Route as SignUpSplatRouteImport } from './routes/sign-up.$'
 import { Route as WorkSlugRouteImport } from './routes/work_.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -34,6 +39,11 @@ const IndexRoute = IndexRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BrandIdentityNamibiaRoute = BrandIdentityNamibiaRouteImport.update({
@@ -72,6 +82,16 @@ const ServicesRoute = ServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignUpRoute = SignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SocialMediaManagementNamibiaRoute =
   SocialMediaManagementNamibiaRouteImport.update({
     id: '/social-media-management-namibia',
@@ -103,6 +123,16 @@ const JournalSlugRoute = JournalSlugRouteImport.update({
   path: '/journal/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignInSplatRoute = SignInSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => SignInRoute,
+} as any)
+const SignUpSplatRoute = SignUpSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => SignUpRoute,
+} as any)
 const WorkSlugRoute = WorkSlugRouteImport.update({
   id: '/work_/$slug',
   path: '/work/$slug',
@@ -112,6 +142,7 @@ const WorkSlugRoute = WorkSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/brand-identity-namibia': typeof BrandIdentityNamibiaRoute
   '/contact': typeof ContactRoute
   '/creative-visuals-motion-namibia': typeof CreativeVisualsMotionNamibiaRoute
@@ -119,17 +150,22 @@ export interface FileRoutesByFullPath {
   '/maintenance': typeof MaintenanceRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/services': typeof ServicesRoute
+  '/sign-in': typeof SignInRouteWithChildren
+  '/sign-up': typeof SignUpRouteWithChildren
   '/social-media-management-namibia': typeof SocialMediaManagementNamibiaRoute
   '/social-media-portfolio': typeof SocialMediaPortfolioRoute
   '/terms': typeof TermsRoute
   '/web-solutions-namibia': typeof WebSolutionsNamibiaRoute
   '/work': typeof WorkRoute
   '/journal/$slug': typeof JournalSlugRoute
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
   '/work/$slug': typeof WorkSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/brand-identity-namibia': typeof BrandIdentityNamibiaRoute
   '/contact': typeof ContactRoute
   '/creative-visuals-motion-namibia': typeof CreativeVisualsMotionNamibiaRoute
@@ -137,18 +173,23 @@ export interface FileRoutesByTo {
   '/maintenance': typeof MaintenanceRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/services': typeof ServicesRoute
+  '/sign-in': typeof SignInRouteWithChildren
+  '/sign-up': typeof SignUpRouteWithChildren
   '/social-media-management-namibia': typeof SocialMediaManagementNamibiaRoute
   '/social-media-portfolio': typeof SocialMediaPortfolioRoute
   '/terms': typeof TermsRoute
   '/web-solutions-namibia': typeof WebSolutionsNamibiaRoute
   '/work': typeof WorkRoute
   '/journal/$slug': typeof JournalSlugRoute
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
   '/work/$slug': typeof WorkSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/brand-identity-namibia': typeof BrandIdentityNamibiaRoute
   '/contact': typeof ContactRoute
   '/creative-visuals-motion-namibia': typeof CreativeVisualsMotionNamibiaRoute
@@ -156,12 +197,16 @@ export interface FileRoutesById {
   '/maintenance': typeof MaintenanceRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/services': typeof ServicesRoute
+  '/sign-in': typeof SignInRouteWithChildren
+  '/sign-up': typeof SignUpRouteWithChildren
   '/social-media-management-namibia': typeof SocialMediaManagementNamibiaRoute
   '/social-media-portfolio': typeof SocialMediaPortfolioRoute
   '/terms': typeof TermsRoute
   '/web-solutions-namibia': typeof WebSolutionsNamibiaRoute
   '/work': typeof WorkRoute
   '/journal_/$slug': typeof JournalSlugRoute
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
   '/work_/$slug': typeof WorkSlugRoute
 }
 export interface FileRouteTypes {
@@ -169,6 +214,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/admin'
     | '/brand-identity-namibia'
     | '/contact'
     | '/creative-visuals-motion-namibia'
@@ -176,17 +222,22 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/privacy-policy'
     | '/services'
+    | '/sign-in'
+    | '/sign-up'
     | '/social-media-management-namibia'
     | '/social-media-portfolio'
     | '/terms'
     | '/web-solutions-namibia'
     | '/work'
     | '/journal/$slug'
+    | '/sign-in/$'
+    | '/sign-up/$'
     | '/work/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/admin'
     | '/brand-identity-namibia'
     | '/contact'
     | '/creative-visuals-motion-namibia'
@@ -194,17 +245,22 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/privacy-policy'
     | '/services'
+    | '/sign-in'
+    | '/sign-up'
     | '/social-media-management-namibia'
     | '/social-media-portfolio'
     | '/terms'
     | '/web-solutions-namibia'
     | '/work'
     | '/journal/$slug'
+    | '/sign-in/$'
+    | '/sign-up/$'
     | '/work/$slug'
   id:
     | '__root__'
     | '/'
     | '/about'
+    | '/admin'
     | '/brand-identity-namibia'
     | '/contact'
     | '/creative-visuals-motion-namibia'
@@ -212,18 +268,23 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/privacy-policy'
     | '/services'
+    | '/sign-in'
+    | '/sign-up'
     | '/social-media-management-namibia'
     | '/social-media-portfolio'
     | '/terms'
     | '/web-solutions-namibia'
     | '/work'
     | '/journal_/$slug'
+    | '/sign-in/$'
+    | '/sign-up/$'
     | '/work_/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdminRoute: typeof AdminRoute
   BrandIdentityNamibiaRoute: typeof BrandIdentityNamibiaRoute
   ContactRoute: typeof ContactRoute
   CreativeVisualsMotionNamibiaRoute: typeof CreativeVisualsMotionNamibiaRoute
@@ -231,6 +292,8 @@ export interface RootRouteChildren {
   MaintenanceRoute: typeof MaintenanceRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ServicesRoute: typeof ServicesRoute
+  SignInRoute: typeof SignInRouteWithChildren
+  SignUpRoute: typeof SignUpRouteWithChildren
   SocialMediaManagementNamibiaRoute: typeof SocialMediaManagementNamibiaRoute
   SocialMediaPortfolioRoute: typeof SocialMediaPortfolioRoute
   TermsRoute: typeof TermsRoute
@@ -254,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/brand-identity-namibia': {
@@ -305,6 +375,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-up': {
+      id: '/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof SignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/social-media-management-namibia': {
       id: '/social-media-management-namibia'
       path: '/social-media-management-namibia'
@@ -347,6 +431,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JournalSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sign-in/$': {
+      id: '/sign-in/$'
+      path: '/$'
+      fullPath: '/sign-in/$'
+      preLoaderRoute: typeof SignInSplatRouteImport
+      parentRoute: typeof SignInRoute
+    }
+    '/sign-up/$': {
+      id: '/sign-up/$'
+      path: '/$'
+      fullPath: '/sign-up/$'
+      preLoaderRoute: typeof SignUpSplatRouteImport
+      parentRoute: typeof SignUpRoute
+    }
     '/work_/$slug': {
       id: '/work_/$slug'
       path: '/work/$slug'
@@ -357,9 +455,32 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface SignInRouteChildren {
+  SignInSplatRoute: typeof SignInSplatRoute
+}
+
+const SignInRouteChildren: SignInRouteChildren = {
+  SignInSplatRoute: SignInSplatRoute,
+}
+
+const SignInRouteWithChildren =
+  SignInRoute._addFileChildren(SignInRouteChildren)
+
+interface SignUpRouteChildren {
+  SignUpSplatRoute: typeof SignUpSplatRoute
+}
+
+const SignUpRouteChildren: SignUpRouteChildren = {
+  SignUpSplatRoute: SignUpSplatRoute,
+}
+
+const SignUpRouteWithChildren =
+  SignUpRoute._addFileChildren(SignUpRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdminRoute: AdminRoute,
   BrandIdentityNamibiaRoute: BrandIdentityNamibiaRoute,
   ContactRoute: ContactRoute,
   CreativeVisualsMotionNamibiaRoute: CreativeVisualsMotionNamibiaRoute,
@@ -367,6 +488,8 @@ const rootRouteChildren: RootRouteChildren = {
   MaintenanceRoute: MaintenanceRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   ServicesRoute: ServicesRoute,
+  SignInRoute: SignInRouteWithChildren,
+  SignUpRoute: SignUpRouteWithChildren,
   SocialMediaManagementNamibiaRoute: SocialMediaManagementNamibiaRoute,
   SocialMediaPortfolioRoute: SocialMediaPortfolioRoute,
   TermsRoute: TermsRoute,
