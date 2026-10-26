@@ -124,14 +124,14 @@ export function AdminPage() {
       </div>
     );
   }
-  if (session === "signed-out") return <Navigate to="/sign-in" />;
+  if (session === "signed-out") return <Navigate to="/login" />;
   return (
     <CmsDashboard
       onLogout={async () => {
         try {
           await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
         } finally {
-          window.location.assign("/sign-in");
+          window.location.assign("/login");
         }
       }}
     />

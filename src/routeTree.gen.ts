@@ -16,6 +16,7 @@ import { Route as BrandIdentityNamibiaRouteImport } from './routes/brand-identit
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CreativeVisualsMotionNamibiaRouteImport } from './routes/creative-visuals-motion-namibia'
 import { Route as JournalRouteImport } from './routes/journal'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ServicesRouteImport } from './routes/services'
@@ -62,6 +63,11 @@ const CreativeVisualsMotionNamibiaRoute =
 const JournalRoute = JournalRouteImport.update({
   id: '/journal',
   path: '/journal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaintenanceRoute = MaintenanceRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/creative-visuals-motion-namibia': typeof CreativeVisualsMotionNamibiaRoute
   '/journal': typeof JournalRoute
+  '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/services': typeof ServicesRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/creative-visuals-motion-namibia': typeof CreativeVisualsMotionNamibiaRoute
   '/journal': typeof JournalRoute
+  '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/services': typeof ServicesRoute
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/creative-visuals-motion-namibia': typeof CreativeVisualsMotionNamibiaRoute
   '/journal': typeof JournalRoute
+  '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/services': typeof ServicesRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/creative-visuals-motion-namibia'
     | '/journal'
+    | '/login'
     | '/maintenance'
     | '/privacy-policy'
     | '/services'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/creative-visuals-motion-namibia'
     | '/journal'
+    | '/login'
     | '/maintenance'
     | '/privacy-policy'
     | '/services'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/creative-visuals-motion-namibia'
     | '/journal'
+    | '/login'
     | '/maintenance'
     | '/privacy-policy'
     | '/services'
@@ -253,6 +265,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   CreativeVisualsMotionNamibiaRoute: typeof CreativeVisualsMotionNamibiaRoute
   JournalRoute: typeof JournalRoute
+  LoginRoute: typeof LoginRoute
   MaintenanceRoute: typeof MaintenanceRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ServicesRoute: typeof ServicesRoute
@@ -315,6 +328,13 @@ declare module '@tanstack/react-router' {
       path: '/journal'
       fullPath: '/journal'
       preLoaderRoute: typeof JournalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/maintenance': {
@@ -405,6 +425,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   CreativeVisualsMotionNamibiaRoute: CreativeVisualsMotionNamibiaRoute,
   JournalRoute: JournalRoute,
+  LoginRoute: LoginRoute,
   MaintenanceRoute: MaintenanceRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   ServicesRoute: ServicesRoute,

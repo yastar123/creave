@@ -16,6 +16,14 @@ describe("App routing", () => {
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
 
+  it("matches the administrator login route at /login", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/login");
+
+    expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
+  });
+
   it("server-renders direct routes with their page metadata", async () => {
     const page = await renderPage("/contact");
 
