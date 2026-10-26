@@ -2,12 +2,14 @@ import { Heart, MessageCircle, Play, TrendingUp, Gauge, Smartphone, Monitor, Sea
 import svcSocial from '@/assets/svc-social.webp';
 import svcMotion from '@/assets/svc-motion.webp';
 import svcWeb from '@/assets/svc-web.webp';
-import { gallery } from '@/lib/studio-content';
+import { useSiteContent } from '@/lib/site-content-context';
 
 type Kind = 'social' | 'identity' | 'motion' | 'web';
 
 /** Visual showcase that illustrates each service with themed floating UI elements. */
 export function ServiceVisual({ kind }: { kind: Kind }) {
+  const { gallery } = useSiteContent();
+  const galleryImage = gallery[2]?.image ?? gallery[0]?.image;
   return <section className={`sv-section sv-${kind}`} aria-hidden="true">
     <div className="sv-stage">
       {kind === 'social' && <>
@@ -19,7 +21,7 @@ export function ServiceVisual({ kind }: { kind: Kind }) {
         <div className="sv-tagrow sv-pos-5"><span>#strategy</span><span>#reels</span><span>#tiktok</span></div>
       </>}
       {kind === 'identity' && <>
-        <img className="sv-main" src={gallery[2]!.image} alt="" width={1200} height={1200} loading="lazy" />
+        {galleryImage && <img className="sv-main" src={galleryImage} alt="" width={1200} height={1200} loading="lazy" />}
         <div className="sv-card sv-pos-1"><span className="sv-label">Palette</span><span className="sv-swatches"><i className="sw-ink" /><i className="sw-grey" /><i className="sw-line" /><i className="sw-paper" /></span></div>
         <div className="sv-card sv-type sv-pos-3"><span className="sv-label">Typeface</span><strong>Aa</strong><span>Geist · Display</span></div>
         <div className="sv-chip sv-dark sv-pos-2">✺ Logo system</div>

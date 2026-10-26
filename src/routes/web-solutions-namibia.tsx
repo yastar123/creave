@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ArrowUpRight, Plus, Minus } from 'lucide-react';
 import { StudioShell, whatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
-import { pageHead } from '@/lib/studio-content';
+import { pageHead } from '@/lib/studio-utils';
 
 const packages = [
   {

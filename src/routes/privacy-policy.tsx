@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { LegalPage } from '@/components/legal-page';
-import { pageHead } from '@/lib/studio-content';
+import { pageHead } from '@/lib/studio-utils';
 
 const sections = [
   { heading: 'Who we are', body: 'CREVORA is a digital and creative agency based in Windhoek, Namibia. This policy explains how we handle personal information shared through this website.' },

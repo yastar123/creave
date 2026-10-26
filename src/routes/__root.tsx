@@ -10,6 +10,8 @@ import {
 import { useEffect } from "react";
 
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { SiteContentProvider } from "../lib/site-content-context";
+import type { SiteContent } from "../lib/site-content-shared";
 
 function NotFoundComponent() {
   return (
@@ -67,19 +69,24 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+  siteContent: SiteContent;
+}>()({
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
+  const { queryClient, siteContent } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RouteMetadata />
-      <Outlet />
+      <SiteContentProvider content={siteContent}>
+        <RouteMetadata />
+        <Outlet />
+      </SiteContentProvider>
     </QueryClientProvider>
   );
 }

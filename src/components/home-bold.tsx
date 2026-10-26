@@ -2,13 +2,15 @@ import { Link } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, ArrowUpRight, Target, Sparkles, PenTool, Gauge, Pause, Play } from 'lucide-react';
 import heroImage from '@/assets/hero-obsidian.webp';
-import { services, trustedBy } from '@/lib/studio-content';
+import { useSiteContent } from '@/lib/site-content-context';
 import { whatsapp } from '@/components/studio-shell';
 import { ServiceVideo } from '@/components/service-video';
 import { Button } from '@/components/ui/button';
 
 /** Full-bleed project-led opening, without scroll-pinned phases. */
 export function BoldHero() {
+  const { projects } = useSiteContent();
+  const featuredProject = projects[0];
   return <section className="hv-hero home-hero hv-dark" aria-labelledby="hv-hero-title">
     <img className="hv-hero-cover" src={heroImage} alt="Sculpted obsidian forms in monochrome light" fetchPriority="high" />
     <div className="hv-hero-masthead">
@@ -23,7 +25,7 @@ export function BoldHero() {
       </div>
       <div className="hv-hero-links">
         <Button asChild variant="ghost" className="hv-hero-link"><Link to="/contact">Start a conversation <ArrowUpRight /></Link></Button>
-        <Button asChild variant="ghost" className="hv-hero-project"><Link to="/work/$slug" params={{ slug: 'mora' }}><span>MORA <small>Brand identity · Concept project</small></span><ArrowUpRight /></Link></Button>
+        {featuredProject && <Button asChild variant="ghost" className="hv-hero-project"><Link to="/work/$slug" params={{ slug: featuredProject.slug }}><span>{featuredProject.name} <small>{featuredProject.category} · Portfolio</small></span><ArrowUpRight /></Link></Button>}
       </div>
     </div>
   </section>;
@@ -31,6 +33,7 @@ export function BoldHero() {
 
 /** Staggered editorial service columns, with captions outside the imagery. */
 export function BoldServices() {
+  const { services } = useSiteContent();
   const [paused, setPaused] = useState(true);
   useEffect(() => {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -103,6 +106,7 @@ export function BoldServices() {
 
 /** Black band with large white logos. */
 export function BoldTrusted() {
+  const { trustedBy } = useSiteContent();
   if (!trustedBy.length) return null;
   const loop = [...trustedBy, ...trustedBy];
   return <section className="hv-trusted hv-dark" aria-labelledby="hv-trusted-title">

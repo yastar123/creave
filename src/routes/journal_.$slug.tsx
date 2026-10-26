@@ -2,11 +2,12 @@ import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 import { ArrowUpRight, ArrowLeft } from 'lucide-react';
 import { StudioShell } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
-import { articles, formatDate } from '@/lib/studio-content';
+import { formatDate } from '@/lib/studio-utils';
+import { useSiteContent } from '@/lib/site-content-context';
 
 export const Route = createFileRoute('/journal_/$slug')({
-  loader: ({ params }) => {
-    const article = articles.find(a => a.slug === params.slug);
+  loader: ({ params, context }) => {
+    const article = context.siteContent.articles.find(a => a.slug === params.slug);
     if (!article) throw notFound();
     return { article };
   },
@@ -25,6 +26,7 @@ export const Route = createFileRoute('/journal_/$slug')({
 
 function ArticlePage() {
   const { article: a } = Route.useLoaderData();
+  const { articles } = useSiteContent();
   const related = [...articles.filter(x => x.slug !== a.slug && x.category === a.category), ...articles.filter(x => x.slug !== a.slug && x.category !== a.category)].slice(0, 2);
   return <StudioShell>
     <article>

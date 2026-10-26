@@ -3,6 +3,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getRouter } from "@/router";
+import { defaultSiteContent } from "@/lib/studio-content";
 
 function jsonResponse(payload: unknown, status = 200) {
   return Promise.resolve({
@@ -32,7 +33,7 @@ async function setupApp(initialUrl = "/") {
     return jsonResponse({ error: `Unexpected request: ${url.pathname}` }, 404);
   });
   vi.stubGlobal("fetch", fetchMock);
-  const router = getRouter(initialUrl);
+  const router = getRouter(defaultSiteContent, initialUrl);
   await router.load();
   render(<RouterProvider router={router} />);
   return fetchMock;

@@ -3,7 +3,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { StudioShell, whatsapp } from '@/components/studio-shell';
 import { StudioGallery } from '@/components/studio-gallery';
 import { Button } from '@/components/ui/button';
-import { pageHead } from '@/lib/studio-content';
+import { pageHead } from '@/lib/studio-utils';
 
 const direction = [
   ['Our Direction', 'We exist to help Namibian businesses move beyond noise and into authority. Our direction is clear: build brands that are trusted, chosen, and remembered in the digital space.'],

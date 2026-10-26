@@ -1,8 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createMemoryHistory, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import type { SiteContent } from "./lib/site-content-shared";
 
-export const getRouter = (initialUrl?: string) => {
+export const getRouter = (siteContent: SiteContent, initialUrl?: string) => {
   const queryClient = new QueryClient();
   const history = initialUrl
     ? createMemoryHistory({ initialEntries: [initialUrl] })
@@ -10,7 +11,7 @@ export const getRouter = (initialUrl?: string) => {
 
   const router = createRouter({
     routeTree,
-    context: { queryClient },
+    context: { queryClient, siteContent },
     ...(history ? { history } : {}),
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,

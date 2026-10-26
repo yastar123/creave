@@ -1,0 +1,55 @@
+.ca-collections { max-width: 1500px; margin: 0 auto; padding: 39px clamp(22px, 4vw, 54px) 60px; }
+.ca-collections-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 24px; border-bottom: 1px solid var(--ca-line); color: #65734e; }
+.ca-collections-heading h1 { margin: 8px 0 7px; color: var(--ca-ink); font-size: clamp(28px, 3vw, 39px); font-weight: 500; letter-spacing: -.055em; }
+.ca-collections-heading p:last-child { margin: 0; color: #777b76; font-size: 12px; }
+.ca-collection-select { display: grid; max-width: 420px; gap: 7px; margin: 20px 0; color: #777d74; font: 9px ui-monospace, SFMono-Regular, monospace; letter-spacing: .06em; }
+.ca-collection-select select { min-height: 40px; padding: 0 11px; border: 1px solid var(--ca-line); background: #fff; color: #292c28; font: 12px 'Geist', ui-sans-serif, sans-serif; }
+.ca-collection-layout { display: grid; grid-template-columns: minmax(210px, 290px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.ca-record-list, .ca-record-editor { min-width: 0; border: 1px solid var(--ca-line); background: #fff; }
+.ca-record-list-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px; border-bottom: 1px solid var(--ca-soft-line); color: #444941; font-size: 11px; font-weight: 550; }
+.ca-record-list-head i { margin-left: 5px; color: #8b9087; font: 9px ui-monospace, SFMono-Regular, monospace; font-style: normal; }
+.ca-record-list-head .ca-button { min-height: 31px; padding: 0 9px; }
+.ca-record-button { display: grid; width: 100%; gap: 5px; padding: 11px 13px; border: 0; border-bottom: 1px solid #eeefeb; background: #fff; color: #383d36; text-align: left; cursor: pointer; }
+.ca-record-button:hover { background: #f6f7f1; }
+.ca-record-button.is-active { background: #eff1e7; box-shadow: inset 3px 0 #75865a; }
+.ca-record-button > span { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.ca-record-button small { color: #8b9087; font: 8px ui-monospace, SFMono-Regular, monospace; }
+.ca-record-empty { margin: 0; padding: 20px 13px; color: #83887f; font-size: 11px; line-height: 1.6; }
+.ca-record-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px; border-bottom: 1px solid var(--ca-soft-line); background: #fafaf7; }
+.ca-record-editor-head h2 { margin: 7px 0 5px; color: #292c28; font-size: 20px; font-weight: 500; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.ca-record-editor-head p:last-child { margin: 0; color: #777d74; font-size: 10px; line-height: 1.6; }
+.ca-record-actions { display: flex; flex: 0 0 auto; gap: 7px; }
+.ca-record-actions .ca-button { min-height: 34px; }
+.ca-button-danger { border: 1px solid #e4c7c2; background: #fff7f5; color: #914a40 !important; }
+.ca-button-danger:hover:not(:disabled) { background: #ffebe7; }
+.ca-record-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; padding: 18px; }
+.ca-record-field { display: grid; align-content: start; gap: 6px; min-width: 0; color: #777d74; font: 9px ui-monospace, SFMono-Regular, monospace; letter-spacing: .04em; }
+.ca-record-field.is-wide { grid-column: 1 / -1; }
+.ca-record-field > span { display: flex; justify-content: space-between; gap: 8px; }
+.ca-record-field em { color: #9a9e97; font: 8px 'Geist', ui-sans-serif, sans-serif; letter-spacing: 0; }
+.ca-record-field input, .ca-record-field textarea { width: 100%; min-height: 36px; padding: 8px 9px; outline: none; border: 1px solid #dedfd9; background: #fff; color: #292c28; font: 11px/1.55 'Geist', ui-sans-serif, sans-serif; letter-spacing: 0; }
+.ca-record-field input:focus, .ca-record-field textarea:focus { border-color: #777f6c; box-shadow: 0 0 0 2px #d5f15b45; }
+.ca-record-field textarea { min-height: 72px; resize: vertical; }
+.ca-collection-feedback, .ca-collection-unsaved { display: flex; grid-column: 1 / -1; align-items: center; gap: 7px; margin: 0; color: #617246; font-size: 10px; }
+.ca-collection-feedback.is-error { color: #a34639; line-height: 1.6; }
+.ca-collection-unsaved { color: #8a6a2e; }
+.ca-collection-loading { padding: 40px clamp(22px, 4vw, 54px); color: #777b76; font-size: 12px; }
+.ca-collection-error { display: flex; max-width: 900px; align-items: center; gap: 12px; margin: 40px auto; padding: 20px; border: 1px solid #ecc9c2; background: #fff3f0; color: #90483e; }
+.ca-collection-error div { display: grid; flex: 1; gap: 4px; font-size: 11px; }
+.ca-collection-error span { color: #777b76; }
+.ca-record-empty-editor { display: grid; justify-items: center; gap: 9px; padding: 55px 20px; color: #81867e; text-align: center; }
+.ca-record-empty-editor strong { color: #454a43; font-size: 13px; font-weight: 550; }
+.ca-record-empty-editor span { font-size: 10px; }
+@media (max-width: 850px) {
+  .ca-collection-layout { grid-template-columns: minmax(0, 1fr); }
+  .ca-record-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .ca-record-list-head { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .ca-collections { padding-top: 24px; }
+  .ca-record-editor-head { align-items: flex-start; flex-direction: column; }
+  .ca-record-actions { width: 100%; }
+  .ca-record-actions .ca-button { flex: 1; }
+  .ca-record-fields { grid-template-columns: minmax(0, 1fr); }
+  .ca-record-field.is-wide { grid-column: auto; }
+}

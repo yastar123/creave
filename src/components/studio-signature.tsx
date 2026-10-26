@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { ArrowUpRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { projects, services, gallery } from '@/lib/studio-content';
+import { useSiteContent } from '@/lib/site-content-context';
 import { whatsapp } from '@/components/studio-shell';
 import svcSocial from '@/assets/svc-social.webp';
 import svcMotion from '@/assets/svc-motion.webp';
@@ -45,8 +45,9 @@ export function ManifestoSection() {
 /** Full-bleed project cards that stick and stack; the previous card recedes. */
 export function StackedWork() {
   const [selected, setSelected] = useState<number | null>(null);
-  const project = selected === null ? null : projects[selected];
-  const list = [...projects, { name: 'FEED STUDIES', category: 'Short-form video', image: gallery[0]!.image, alt: gallery[0]!.alt, title: 'Vertical stories, made to be watched twice.', description: 'A self-initiated short-form series exploring hooks, pacing and product storytelling for Reels and TikTok.' }];
+  const { projects, gallery } = useSiteContent();
+  const list = [...projects, ...(gallery[0] ? [{ name: 'FEED STUDIES', category: 'Short-form video', image: gallery[0].image, alt: gallery[0].alt, title: 'Vertical stories, made to be watched twice.', description: 'A self-initiated short-form series exploring hooks, pacing and product storytelling for Reels and TikTok.' }] : [])];
+  const project = selected === null ? null : list[selected];
   const wrap = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (reduced()) return;
@@ -79,18 +80,21 @@ export function StackedWork() {
 
 /** Bold, image-led service cards so visitors instantly see what CREVORA does. */
 export function ServiceShowcase() {
-  const imgs = [svcSocial, gallery[2]!.image, svcMotion, svcWeb];
+  const { services, gallery } = useSiteContent();
+  const imgs = [svcSocial, gallery[2]?.image ?? gallery[0]?.image, svcMotion, svcWeb];
   const chips = [['♥ 1.2K', 'Reels · TikTok'], ['Aa', 'Logo · Colour'], ['● REC', '4K · Motion'], ['98', 'Speed score']];
   return <section className="ss-section" id="services">
     <div className="ss-head"><span className="eyebrow">(03) — What we do</span><h2>Four services.<br /><em>One clear direction.</em></h2><Link to="/services" className="studio-button studio-button-outline inline-flex items-center">All services <ArrowUpRight size={16} /></Link></div>
-    <div className="ss-grid">{services.map((s, i) => <Link key={s.title} to={s.to} className={`ss-card ss-card-${i}`}>
-      <img src={imgs[i]} alt="" loading="lazy" width={1200} height={1200} />
+    <div className="ss-grid">{services.map((s, i) => {
+      const chip = chips[i] ?? [s.tags[0] ?? s.title, s.tags.slice(1, 3).join(' · ')];
+      return <Link key={s.title} to={s.to} className={`ss-card ss-card-${i}`}>
+      {imgs[i] && <img src={imgs[i]} alt="" loading="lazy" width={1200} height={1200} />}
       <span className="ss-shade" />
-      <span className="ss-top"><span className="ss-num">0{i + 1}</span>{i === 0 ? <span className="ss-pill">Core focus</span> : <span className="ss-pill">{chips[i]![1]}</span>}</span>
-      <span className="ss-float" aria-hidden="true">{chips[i]![0]}</span>
+      <span className="ss-top"><span className="ss-num">0{i + 1}</span>{i === 0 ? <span className="ss-pill">Core focus</span> : <span className="ss-pill">{chip[1]}</span>}</span>
+      <span className="ss-float" aria-hidden="true">{chip[0]}</span>
       <span className="ss-body"><h3>{s.title}</h3><span className="ss-tags">{s.tags.slice(0, 3).map(t => <span key={t}>{t}</span>)}</span></span>
       <span className="ss-arrow"><ArrowUpRight /></span>
-    </Link>)}</div>
+    </Link>})}</div>
   </section>;
 }
 

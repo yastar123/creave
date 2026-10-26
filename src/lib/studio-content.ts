@@ -1,3 +1,5 @@
+import type { SiteContent } from "./site-content-shared";
+
 import moraAsset from '@/assets/mora-brand.jpg.asset.json';
 const mora = moraAsset.url;
 import strideAsset from '@/assets/stride-campaign.jpg.asset.json';
@@ -18,10 +20,10 @@ export const gallery = [
 ];
 
 export const services = [
-  { title: 'Social Media Marketing & Branding', to: '/social-media-management-namibia', short: 'Social Media Marketing\n& Branding', description: 'Our core focus. We build your brand on social media through strategy, organic short-form video for Instagram Reels and TikTok, content planning, management and reporting — so the right audience finds you and turns into real business.', tags: ['Strategy & positioning', 'Organic short-form video', 'Management & reporting'], detail: 'From brand positioning, content pillars and recurring series to production, community engagement and performance analysis, every creative decision is tied to your business goals.' },
-  { title: 'Brand Identity & Visual', to: '/brand-identity-namibia', short: 'Brand Identity\n& Visual', description: 'We build or refine the visual identity of your business — logo systems, colour, typography direction, graphic elements and brand guidelines.', tags: ['Logo systems', 'Brand guidelines', 'Rebranding'], detail: 'A coherent identity applied across your business communication, designed to work wherever your brand shows up.' },
-  { title: 'Creative Content & Motion', to: '/creative-visuals-motion-namibia', short: 'Creative Content\n& Motion', description: 'Social media designs, campaign assets, short-form video, editing and motion graphics that help your brand communicate with more impact.', tags: ['Campaign assets', 'Video editing', 'Motion graphics'], detail: 'We shape creative concepts, visuals and motion around your story, audience and project scope.' },
-  { title: 'Web & Digital Solutions', to: '/web-solutions-namibia', short: 'Web & Digital\nSolutions', description: 'Business websites, landing pages and responsive digital solutions that give your brand a clear, professional home online.', tags: ['Business websites', 'Landing pages', 'Responsive design'], detail: 'Clear structure, intentional design and mobile-first development within the scope of each project.' },
+  { title: 'Social Media Marketing & Branding', to: '/social-media-management-namibia', menuNote: 'Core focus — strategy, short-form video, management', short: 'Social Media Marketing\n& Branding', description: 'Our core focus. We build your brand on social media through strategy, organic short-form video for Instagram Reels and TikTok, content planning, management and reporting — so the right audience finds you and turns into real business.', tags: ['Strategy & positioning', 'Organic short-form video', 'Management & reporting'], detail: 'From brand positioning, content pillars and recurring series to production, community engagement and performance analysis, every creative decision is tied to your business goals.' },
+  { title: 'Brand Identity & Visual', to: '/brand-identity-namibia', menuNote: 'Logo systems, guidelines, rebranding', short: 'Brand Identity\n& Visual', description: 'We build or refine the visual identity of your business — logo systems, colour, typography direction, graphic elements and brand guidelines.', tags: ['Logo systems', 'Brand guidelines', 'Rebranding'], detail: 'A coherent identity applied across your business communication, designed to work wherever your brand shows up.' },
+  { title: 'Creative Content & Motion', to: '/creative-visuals-motion-namibia', menuNote: 'Campaign assets, video and motion', short: 'Creative Content\n& Motion', description: 'Social media designs, campaign assets, short-form video, editing and motion graphics that help your brand communicate with more impact.', tags: ['Campaign assets', 'Video editing', 'Motion graphics'], detail: 'We shape creative concepts, visuals and motion around your story, audience and project scope.' },
+  { title: 'Web & Digital Solutions', to: '/web-solutions-namibia', menuNote: 'Business websites and landing pages', short: 'Web & Digital\nSolutions', description: 'Business websites, landing pages and responsive digital solutions that give your brand a clear, professional home online.', tags: ['Business websites', 'Landing pages', 'Responsive design'], detail: 'Clear structure, intentional design and mobile-first development within the scope of each project.' },
 ];
 export type Project = { slug: string; name: string; client: string; year: string; category: string; services: string[]; image: string; alt: string; title: string; description: string; challenge: string; approach: string; result: string; gallery: { image: string; alt: string }[] };
 // Placeholder portfolio content (dummy) until real case studies are supplied.
@@ -48,11 +50,16 @@ export const articles: Article[] = [
   { slug: 'landing-page-that-converts', category: 'Web & Digital', date: '2026-05-04', author: 'CREVORA Studio', title: 'What Makes a Landing Page Actually Bring In Enquiries', excerpt: 'Clear message, one goal, fast loading on mobile. The basics that most landing pages still miss.', body: ['Most visitors arrive on a phone, often on mobile data. If your page is slow or confusing, they leave.', 'A good landing page has one goal, a headline that says what you do, proof that you can do it, and a clear way to get in touch — ideally WhatsApp.', 'Everything else is optional.'], related: { label: 'Web & Digital Solutions', to: '/web-solutions-namibia' } },
   { slug: 'hooks-first-three-seconds', category: 'Content & Motion', date: '2026-04-15', author: 'CREVORA Studio', title: 'The First Three Seconds: Writing Hooks That Stop the Scroll', excerpt: 'Your video is judged before it really starts. A practical look at hooks that earn attention honestly.', body: ['On short-form platforms, the first seconds decide whether anyone sees the rest.', 'Strong hooks are specific: a question your customer actually asks, a surprising result, or a visual that breaks the pattern of the feed.', 'Avoid clickbait. A hook should promise something the video delivers.'], related: { label: 'Creative Content & Motion', to: '/creative-visuals-motion-namibia' } },
 ];
-export const formatDate = (d: string) => new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-export function pageHead(title: string, description: string) {
-  return { meta: [{ title: `${title} — CREVORA` }, { name: 'description', content: description }, { property: 'og:title', content: `${title} — CREVORA` }, { property: 'og:description', content: description }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary_large_image' }, { property: 'og:image', content: chrome }, { name: 'twitter:image', content: chrome }] };
-}
 const articleImages = [phone, mora, poster, stride, chrome];
 articles.forEach((a, i) => { a.image ??= articleImages[i % articleImages.length]!; a.imageAlt ??= gallery.find(g => g.image === a.image)?.alt ?? a.title; });
-export const journalCategories = Array.from(new Set(articles.map(a => a.category)));
 export const legalLinks = [{ title: 'Privacy Policy', to: '/privacy-policy' }, { title: 'Terms of Service', to: '/terms' }] as const;
+
+export const defaultSiteContent: SiteContent = {
+  services,
+  projects,
+  articles,
+  gallery,
+  trustedBy,
+  socials,
+  legalLinks: [...legalLinks],
+};

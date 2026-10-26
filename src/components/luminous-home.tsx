@@ -5,7 +5,7 @@ import heroImg from '@/assets/hero-obsidian.webp';
 import svcSocial from '@/assets/svc-social.webp';
 import svcMotion from '@/assets/svc-motion.webp';
 import svcWeb from '@/assets/svc-web.webp';
-import { services, gallery } from '@/lib/studio-content';
+import { useSiteContent } from '@/lib/site-content-context';
 import { whatsapp } from '@/components/studio-shell';
 
 const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -59,12 +59,12 @@ export function PinnedHero() {
 
 /** Centred two-tone heading followed by a horizontal rounded-card carousel of the four services. */
 export function ServiceCarousel() {
+  const { services, gallery } = useSiteContent();
   const section = useRef<HTMLElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
   const [pinned, setPinned] = useState(false);
-  const imgs = [svcSocial, gallery[2]!.image, svcMotion, svcWeb];
-  const bullets = [['Strategy & positioning', 'Organic Reels & TikTok', 'Management & reporting'], ['Logo systems', 'Colour & typography', 'Brand guidelines'], ['Campaign visuals', 'Video editing', 'Motion graphics'], ['Business websites', 'Landing pages', 'SEO-ready & fast']];
+  const imgs = [svcSocial, gallery[2]?.image ?? gallery[0]?.image, svcMotion, svcWeb];
   const step = () => { const el = track.current; const card = el?.children[0] as HTMLElement | undefined; return card ? card.offsetWidth + 16 : 0; };
   const go = (d: number) => {
     const el = track.current; if (!el) return;
@@ -104,8 +104,8 @@ export function ServiceCarousel() {
     <h2 className="lh-title">More than an agency. <span>Strategy, content and digital — in one creative team.</span></h2>
     <div ref={track} className="lh-carousel" onScroll={onScroll}>{services.map((s, i) => <Link key={s.title} to={s.to} className="lh-scard">
       <span className="lh-scard-head"><strong>0{i + 1} · {s.title}.</strong> <span>{s.description.split('.')[0]}.</span></span>
-      <span className="lh-scard-media"><img src={imgs[i]} alt="" width={1200} height={1200} loading="lazy" />{i === 0 && <span className="lh-badge">Core focus</span>}</span>
-      <ul>{bullets[i]!.map(b => <li key={b}><strong>{b.split(' ')[0]}</strong> {b.split(' ').slice(1).join(' ')}</li>)}</ul>
+      <span className="lh-scard-media">{imgs[i] && <img src={imgs[i]} alt="" width={1200} height={1200} loading="lazy" />}{i === 0 && <span className="lh-badge">Core focus</span>}</span>
+      <ul>{s.tags.slice(0, 3).map(b => <li key={b}><strong>{b.split(' ')[0]}</strong> {b.split(' ').slice(1).join(' ')}</li>)}</ul>
     </Link>)}</div>
     <div className="lh-controls"><button type="button" onClick={() => go(-1)} aria-label="Previous service"><ArrowLeft size={16} /></button><span className="lh-dots">{services.map((_, i) => <i key={i} className={i === idx ? 'on' : ''} />)}</span><button type="button" onClick={() => go(1)} aria-label="Next service"><ArrowRight size={16} /></button></div>
     <div className="lh-center"><Link to="/services" className="lh-btn">Explore all services <ArrowRight size={16} /></Link></div>
@@ -130,8 +130,10 @@ export function FillStatement() {
 
 /** Rounded image card with pill tabs that swap the scene per industry. */
 export function IndustryTabs() {
-  const tabs = [['Hospitality', gallery[0]!.image], ['Retail & products', gallery[3]!.image], ['Real estate', gallery[4]!.image], ['Startups', gallery[1]!.image], ['Corporate', gallery[2]!.image]] as const;
+  const { gallery } = useSiteContent();
+  const tabs = gallery.map((item) => [item.title, item.image] as const);
   const [t, setT] = useState(0);
+  if (!tabs.length) return null;
   return <section className="lh-section">
     <div className="lh-tabcard">{tabs.map(([, src], i) => <img key={i} src={src} alt="" loading="lazy" className={i === t ? 'on' : ''} />)}<span className="lh-veil" />
       <h2>One studio — adapted to your business</h2>

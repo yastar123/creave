@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { LegalPage } from '@/components/legal-page';
-import { pageHead } from '@/lib/studio-content';
+import { pageHead } from '@/lib/studio-utils';
 
 // Placeholder legal copy — replace with text reviewed by CREVORA.
 const sections = [

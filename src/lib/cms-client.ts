@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { CmsPage, CmsSection } from "./cms-shared";
+import type { SiteContent, SiteContentCollection } from "./site-content-shared";
 
 export type CmsPageRecord = CmsPage & {
   sections: CmsSection[];
@@ -30,6 +31,8 @@ export type CmsInquiryPage = {
   page: number;
   pageSize: number;
 };
+
+export type CmsSiteContent = SiteContent;
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -61,6 +64,28 @@ export function useAdminCmsGlobals() {
     queryKey: ["cms", "admin", "globals"],
     queryFn: () => requestJson<{ globals: CmsGlobals }>("/api/cms/admin/globals"),
     retry: false,
+  });
+}
+
+export function useAdminSiteContent() {
+  return useQuery({
+    queryKey: ["cms", "admin", "collections"],
+    queryFn: () => requestJson<{ content: CmsSiteContent }>("/api/cms/admin/collections"),
+    retry: false,
+  });
+}
+
+export function useSaveSiteCollection() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ key, items }: { key: SiteContentCollection; items: unknown[] }) =>
+      requestJson<{ ok: true; collectionKey: SiteContentCollection; items: unknown[] }>(
+        `/api/cms/admin/collections/${encodeURIComponent(key)}`,
+        { method: "PUT", body: JSON.stringify({ items }) },
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["cms", "admin", "collections"] });
+    },
   });
 }
 

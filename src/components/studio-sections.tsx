@@ -3,9 +3,11 @@ import { Link } from '@tanstack/react-router';
 import { ArrowUpRight, ArrowRight, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { services, projects, articles, trustedBy, formatDate } from '@/lib/studio-content';
+import { formatDate } from '@/lib/studio-utils';
+import { useSiteContent } from '@/lib/site-content-context';
 
 export function ServicesSection({ full = false }: { full?: boolean }) {
+  const { services } = useSiteContent();
   const [active, setActive] = useState<number | null>(0);
   return <section className="services-section section-pad" id="services">
     <div className="section-heading reveal"><span className="eyebrow">03 / CAPABILITIES</span><h2>Clear strategy.<br />Distinctive creativity.</h2><p>We connect the dots between your brand,<br className="desktop-break" /> your content, and your next customer.</p></div>
@@ -17,6 +19,7 @@ export function ServicesSection({ full = false }: { full?: boolean }) {
 }
 
 export function WorkSection() {
+  const { projects } = useSiteContent();
   const [selected, setSelected] = useState<number | null>(null);
   const project = selected === null ? null : projects[selected];
   return <section className="work-section section-pad" id="selected-work">
@@ -36,12 +39,14 @@ export function ProcessSection() {
 }
 
 export function TrustedBy() {
+  const { trustedBy } = useSiteContent();
   if (!trustedBy.length) return null;
   const loop = [...trustedBy, ...trustedBy];
   return <section className="trusted-section section-pad" aria-labelledby="trusted-title"><div className="trusted-head"><span className="eyebrow" id="trusted-title">Trusted by</span><span className="trusted-note">Businesses across Namibia</span></div><div className="trusted-marquee" aria-hidden="false"><ul className="trusted-list">{loop.map((c, i) => <li key={`${c.name}-${i}`} aria-hidden={i >= trustedBy.length}>{c.logo ? <img src={c.logo} alt={i < trustedBy.length ? c.name : ''} loading="lazy" /> : <span>{c.name}</span>}</li>)}</ul></div></section>;
 }
 
 export function JournalSection({ full = false }: { full?: boolean }) {
+  const { articles } = useSiteContent();
   const list = full ? articles : articles.slice(0, 3);
   return <section className="journal-section section-pad"><div className="section-heading reveal"><span className="eyebrow">Journal</span><h2>Fresh perspectives.</h2>{!full && <Button variant="nav" className="text-cta" asChild><Link to="/journal">Explore the journal <ArrowUpRight /></Link></Button>}</div><div className="journal-grid reveal">{list.map((a, i) => <article className="journal-item" key={a.slug}><Link to="/journal/$slug" params={{ slug: a.slug }} className={`journal-art journal-art-${i % 3}`} aria-hidden="true" tabIndex={-1}>{i % 3 === 0 ? <><div className="art-focus" /><span>MAKE<br />THEM<br />STOP.</span><ArrowUpRight /></> : i % 3 === 1 ? <><span className="art-aa">Aa</span><div className="art-lines" /><span className="art-small">IDENTITY IS EVERYTHING.</span></> : <><span className="art-intent">Less.<br /><span>But better.</span></span><Plus /></>}</Link><div className="journal-meta"><span>{a.category}</span><time dateTime={a.date}>{formatDate(a.date)}</time></div><Button variant="nav" className="journal-title" asChild><Link to="/journal/$slug" params={{ slug: a.slug }}>{a.title}<ArrowUpRight /></Link></Button></article>)}</div></section>;
 }

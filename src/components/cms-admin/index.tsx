@@ -5,6 +5,7 @@ import {
   Check,
   ChevronDown,
   CircleAlert,
+  Database,
   Eye,
   FileText,
   GripVertical,
@@ -32,12 +33,13 @@ import { cmsPages, cmsSectionTypes } from "@/lib/cms-shared";
 import type { CmsSection, CmsSectionType } from "@/lib/cms-shared";
 import { CmsInbox } from "./inbox";
 import { CmsOverview } from "./overview";
+import { CmsCollections } from "./collections";
 
 import "./cms-admin.css";
 
 type GlobalKey = "navbar" | "footer";
 type Selection = { kind: "page"; id: string } | { kind: "global"; id: GlobalKey };
-type AdminView = "overview" | "pages" | "inquiries";
+type AdminView = "overview" | "pages" | "inquiries" | "collections";
 type SaveState = "saved" | "saving" | "error" | "idle";
 
 const sectionLabels: Record<CmsSectionType, string> = {
@@ -516,6 +518,15 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
             <span>Inbox</span>
             {inquirySummaryQuery.data && <span className="ca-nav-count">{inquirySummaryQuery.data.total}</span>}
           </button>
+          <button
+            aria-current={activeView === "collections" ? "page" : undefined}
+            className={`ca-nav-item ${activeView === "collections" ? "is-active" : ""}`}
+            onClick={() => openView("collections")}
+            type="button"
+          >
+            <Database size={15} className="ca-nav-icon" />
+            <span>Data collections</span>
+          </button>
         </div>
         <div className="ca-sidebar-label">SITE CONTENT <span>{cmsPages.length} PAGES</span></div>
         <nav aria-label="CMS content">
@@ -574,9 +585,9 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
       <section className="ca-workspace">
         <header className="ca-topbar">
           <div className="ca-breadcrumb">
-            <span>{activeView === "overview" ? "WORKSPACE" : activeView === "inquiries" ? "INBOX" : "CONTENT"}</span>
+            <span>{activeView === "overview" ? "WORKSPACE" : activeView === "inquiries" ? "INBOX" : activeView === "collections" ? "DATA" : "CONTENT"}</span>
             <i>/</i>
-            <strong>{activeView === "overview" ? "Overview" : activeView === "inquiries" ? "Contact requests" : selection.kind === "page" ? pageMeta?.title : globalTitle}</strong>
+            <strong>{activeView === "overview" ? "Overview" : activeView === "inquiries" ? "Contact requests" : activeView === "collections" ? "Content collections" : selection.kind === "page" ? pageMeta?.title : globalTitle}</strong>
           </div>
           {activeView === "pages" && (
             <>
@@ -634,6 +645,8 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
           />
         ) : activeView === "inquiries" ? (
           <CmsInbox />
+        ) : activeView === "collections" ? (
+          <CmsCollections />
         ) : (
         <div className="ca-content-layout">
           <div className="ca-editor-column">

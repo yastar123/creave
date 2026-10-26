@@ -30,3 +30,9 @@ CREATE TABLE IF NOT EXISTS public.cms_globals (
   content JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS public.cms_content_collections (
+  collection_key VARCHAR(40) PRIMARY KEY,
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

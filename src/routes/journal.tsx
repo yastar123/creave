@@ -2,14 +2,15 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowUpRight, ArrowLeft, ArrowRight } from 'lucide-react';
 import { StudioShell } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
-import { articles, journalCategories, formatDate, pageHead } from '@/lib/studio-content';
+import { formatDate, pageHead } from '@/lib/studio-utils';
+import { useSiteContent } from '@/lib/site-content-context';
 
 const PER_PAGE = 6;
 type Search = { category?: string | undefined; page?: number | undefined };
 
 export const Route = createFileRoute('/journal')({
   validateSearch: (s: Record<string, unknown>): Search => ({
-    category: typeof s['category'] === 'string' && journalCategories.includes(s['category']) ? s['category'] : undefined,
+    category: typeof s['category'] === 'string' && s['category'].length <= 120 ? s['category'] : undefined,
     page: Number(s['page']) > 1 ? Math.floor(Number(s['page'])) : undefined,
   }),
   head: () => pageHead('Journal — Ideas Worth Sharing', 'Perspectives from CREVORA on social media strategy, brand identity and creative content for businesses in Namibia.'),
@@ -18,6 +19,8 @@ export const Route = createFileRoute('/journal')({
 
 function Journal() {
   const { category, page = 1 } = Route.useSearch();
+  const { articles } = useSiteContent();
+  const journalCategories = Array.from(new Set(articles.map((article) => article.category)));
   const filtered = category ? articles.filter(a => a.category === category) : articles;
   const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const current = Math.min(page, pages);

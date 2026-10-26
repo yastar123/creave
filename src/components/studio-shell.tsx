@@ -1,4 +1,3 @@
-import { socials, legalLinks } from '@/lib/studio-content';
 import { SocialIcon } from '@/components/social-icon';
 import { Link, useLocation } from '@tanstack/react-router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -9,15 +8,10 @@ import { StudioFx } from '@/components/studio-fx';
 import { StudioChoreography } from '@/components/studio-choreography';
 import { CmsPageSections } from '@/components/cms-sections';
 import { usePublicCmsGlobals } from '@/lib/cms-client';
+import { useSiteContent } from '@/lib/site-content-context';
 
 export const whatsapp = 'https://wa.me/264815781719?text=Hi%20CREVORA%2C%20I%27d%20love%20to%20talk%20about%20my%20brand.';
 const nav = [{ title: 'Services', to: '/services' }, { title: 'About', to: '/about' }, { title: 'Journal', to: '/journal' }, { title: 'Contact', to: '/contact' }] as const;
-const serviceMenu = [
-  { index: '01', title: 'Social Media Marketing & Branding', note: 'Core focus — strategy, short-form video, management', to: '/social-media-management-namibia' },
-  { index: '02', title: 'Brand Identity & Visual', note: 'Logo systems, guidelines, rebranding', to: '/brand-identity-namibia' },
-  { index: '03', title: 'Creative Content & Motion', note: 'Campaign assets, video and motion', to: '/creative-visuals-motion-namibia' },
-  { index: '04', title: 'Web & Digital Solutions', note: 'Business websites and landing pages', to: '/web-solutions-namibia' },
-] as const;
 
 function lines(value: string | undefined) {
   return (value ?? '').split('\n').map(line => line.trim()).filter(Boolean);
@@ -54,12 +48,19 @@ function cmsPageId(pathname: string) {
 }
 
 export function StudioShell({ children, darkHeader = false }: { children: ReactNode; darkHeader?: boolean }) {
+  const { services, socials, legalLinks } = useSiteContent();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const closeTimer = useRef<number | undefined>(undefined);
   const location = useLocation();
   const cmsGlobals = usePublicCmsGlobals().data?.globals;
+  const serviceMenu = services.map((service, index) => ({
+    index: String(index + 1).padStart(2, '0'),
+    title: service.title,
+    note: service.menuNote,
+    to: service.to,
+  }));
   const navItems = parseLinks(cmsGlobals?.navbar["primaryLinks"], nav);
   const headerNote = (cmsGlobals?.navbar["studioNote"] || 'Independent minds.\nIntentional work.').split('\n');
   const footerExtraLinks = parseLinks(cmsGlobals?.footer["links"], []);

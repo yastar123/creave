@@ -2,6 +2,14 @@ import type { Express, NextFunction, Request, Response } from "express";
 import type { Pool } from "pg";
 import * as z from "zod";
 import { cmsPages, cmsPageIds, cmsSectionTypes, type CmsSection } from "../src/lib/cms-shared";
+import {
+  collectionItemIdentity,
+  siteContentCollectionKeys,
+  siteContentCollectionSchemas,
+  siteContentSchema,
+  type SiteContent,
+  type SiteContentCollection,
+} from "../src/lib/site-content-shared";
 import { getAdminSession } from "./auth";
 
 export const cmsSectionSchema = z.object({
@@ -20,7 +28,46 @@ const cmsGlobalSchema = z.record(z.string().max(80), z.string().max(8000)).refin
   "Too many content fields.",
 );
 
+export async function initializeSiteContent(pool: Pool, defaults: SiteContent) {
+  const validated = siteContentSchema.parse(defaults);
+  for (const key of siteContentCollectionKeys) {
+    await pool.query(
+      `INSERT INTO public.cms_content_collections (collection_key, items, updated_at)
+       VALUES ($1, $2::jsonb, NOW())
+       ON CONFLICT (collection_key) DO NOTHING`,
+      [key, JSON.stringify(validated[key])],
+    );
+  }
+}
+
+export async function loadSiteContent(pool: Pool): Promise<SiteContent> {
+  const result = await pool.query<{ collection_key: string; items: unknown }>(
+    "SELECT collection_key, items FROM public.cms_content_collections",
+  );
+  const rows = new Map(result.rows.map((row) => [row.collection_key, row.items]));
+  const content: Record<string, unknown> = {};
+
+  for (const key of siteContentCollectionKeys) {
+    if (!rows.has(key)) {
+      throw new Error(`The PostgreSQL content collection "${key}" has not been initialized.`);
+    }
+    const parsed = siteContentCollectionSchemas[key].safeParse(rows.get(key));
+    if (!parsed.success) {
+      throw new Error(`The PostgreSQL content collection "${key}" contains invalid data.`);
+    }
+    content[key] = parsed.data;
+  }
+
+  return siteContentSchema.parse(content);
+}
+
 export function registerCmsRoutes(app: Express, pool: Pool) {
+  app.get("/api/cms/public-collections", async (_request, response) => {
+    const content = await loadSiteContent(pool);
+    response.setHeader("Cache-Control", "no-store");
+    response.json({ content });
+  });
+
   app.get("/api/cms/public/:pageId", async (request, response) => {
     const page = cmsPages.find((item) => item.id === request.params["pageId"]);
     if (!page) {
@@ -52,6 +99,58 @@ export function registerCmsRoutes(app: Express, pool: Pool) {
   });
 
   app.use("/api/cms/admin", createAdminGuard());
+
+  app.get("/api/cms/admin/collections", async (_request, response) => {
+    const content = await loadSiteContent(pool);
+    response.setHeader("Cache-Control", "no-store");
+    response.json({ content });
+  });
+
+  app.put("/api/cms/admin/collections/:collectionKey", async (request, response) => {
+    const key = request.params["collectionKey"] ?? "";
+    if (!siteContentCollectionKeys.includes(key as SiteContentCollection)) {
+      response.status(404).json({ error: "Content collection not found." });
+      return;
+    }
+    const collectionKey = key as SiteContentCollection;
+    const parsed = z.object({ items: z.unknown() }).safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: "The collection payload is invalid." });
+      return;
+    }
+    const collection = siteContentCollectionSchemas[collectionKey].safeParse(parsed.data.items);
+    if (!collection.success) {
+      response.status(400).json({
+        error: "One or more records do not match this collection.",
+        details: collection.error.flatten(),
+      });
+      return;
+    }
+
+    const items = collection.data as unknown[];
+    const identities = items.map((item) => collectionItemIdentity(collectionKey, item));
+    if (identities.some((identity) => !identity) || new Set(identities).size !== identities.length) {
+      response.status(400).json({ error: "Every record must have a unique identifier." });
+      return;
+    }
+
+    const serialized = JSON.stringify(items);
+    if (Buffer.byteLength(serialized, "utf8") > 700_000) {
+      response.status(413).json({ error: "This collection is too large to save." });
+      return;
+    }
+
+    await pool.query(
+      `INSERT INTO public.cms_content_collections (collection_key, items, updated_at)
+       VALUES ($1, $2::jsonb, NOW())
+       ON CONFLICT (collection_key) DO UPDATE
+       SET items = EXCLUDED.items, updated_at = NOW()`,
+      [collectionKey, serialized],
+    );
+
+    response.setHeader("Cache-Control", "no-store");
+    response.json({ ok: true, collectionKey, items });
+  });
 
   app.get("/api/cms/admin/inquiries", async (request, response) => {
     const parsed = z.object({

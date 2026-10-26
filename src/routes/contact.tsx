@@ -4,7 +4,8 @@ import { ArrowUpRight, MessageCircle } from 'lucide-react';
 import * as z from 'zod';
 import { StudioShell, whatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
-import { services, pageHead } from '@/lib/studio-content';
+import { pageHead } from '@/lib/studio-utils';
+import { useSiteContent } from '@/lib/site-content-context';
 
 type FieldKey = 'name' | 'company' | 'email' | 'phone' | 'interest' | 'message' | 'privacyConsent';
 
@@ -29,7 +30,8 @@ export const Route = createFileRoute('/contact')({
 });
 
 function Contact() {
-  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', interest: services[0]!.title, message: '', whatsappOk: true, privacyConsent: false });
+  const { services } = useSiteContent();
+  const [form, setForm] = useState(() => ({ name: '', company: '', email: '', phone: '', interest: services[0]?.title ?? '', message: '', whatsappOk: true, privacyConsent: false }));
   const [hp, setHp] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
@@ -138,7 +140,9 @@ function Contact() {
           <input required type="tel" maxLength={20} autoComplete="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+264" aria-invalid={!!errors.phone} />
         </Field>
         <Field label="Select your primary interest" error={errors.interest}>
-          <select value={form.interest} onChange={e => set('interest', e.target.value)}>{services.map(s => <option key={s.title}>{s.title}</option>)}</select>
+          <select value={form.interest} onChange={e => set('interest', e.target.value)}>
+            {services.length ? services.map(s => <option key={s.to}>{s.title}</option>) : <option value="">No services available</option>}
+          </select>
         </Field>
         <Field label="Description — tell us about your brand goals, challenges, or ideas you’re currently exploring" error={errors.message}>
           <textarea required maxLength={1000} value={form.message} onChange={e => set('message', e.target.value)} placeholder="Share a bit about your brand, what you’re trying to achieve, or what feels unclear right now. There’s no need to have everything figured out." aria-invalid={!!errors.message} />

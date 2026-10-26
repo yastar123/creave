@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowUpRight } from 'lucide-react';
 import { StudioShell } from '@/components/studio-shell';
-import { projects, pageHead } from '@/lib/studio-content';
+import { pageHead } from '@/lib/studio-utils';
+import { useSiteContent } from '@/lib/site-content-context';
 
 export const Route = createFileRoute('/work')({
   head: () => pageHead('Our Work — Selected Projects', 'Selected branding, social media and creative work by CREVORA, a creative agency in Windhoek, Namibia.'),
@@ -9,6 +10,7 @@ export const Route = createFileRoute('/work')({
 });
 
 function Work() {
+  const { projects } = useSiteContent();
   return <StudioShell>
     <section className="inner-hero"><span className="eyebrow">OUR WORK</span><h1>Work, presented<br />with intent.</h1><p>A selection of identities, campaigns and social content. <Link to="/social-media-portfolio" className="text-cta">See the social media portfolio <ArrowUpRight size={14} /></Link></p></section>
     <section className="work-index section-pad">{projects.map((p, i) => <article key={p.slug} className={`work-index-item work-index-${i % 3} reveal`}>

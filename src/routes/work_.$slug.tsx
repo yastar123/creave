@@ -2,11 +2,11 @@ import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 import { ArrowUpRight, ArrowLeft } from 'lucide-react';
 import { StudioShell } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
-import { projects } from '@/lib/studio-content';
+import { useSiteContent } from '@/lib/site-content-context';
 
 export const Route = createFileRoute('/work_/$slug')({
-  loader: ({ params }) => {
-    const project = projects.find(p => p.slug === params.slug);
+  loader: ({ params, context }) => {
+    const project = context.siteContent.projects.find(p => p.slug === params.slug);
     if (!project) throw notFound();
     return { project };
   },
@@ -22,6 +22,7 @@ export const Route = createFileRoute('/work_/$slug')({
 
 function ProjectPage() {
   const { project: p } = Route.useLoaderData();
+  const { projects } = useSiteContent();
   const others = projects.filter(x => x.slug !== p.slug).slice(0, 2);
   return <StudioShell>
     <header className="inner-hero"><Link to="/work" className="article-back"><ArrowLeft size={14} /> All work</Link><span className="eyebrow">{p.category}</span><h1>{p.name}</h1><p>{p.title} {p.description}</p></header>

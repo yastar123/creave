@@ -3,7 +3,7 @@ import { ServiceVisual } from '@/components/service-visual';
 import { ArrowUpRight } from 'lucide-react';
 import { StudioShell, whatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
-import { pageHead } from '@/lib/studio-content';
+import { pageHead } from '@/lib/studio-utils';
 
 const covers = [
   { label: 'Social Campaign Assets', text: 'Short-form video and motion assets made for Instagram, TikTok, Facebook and LinkedIn.' },

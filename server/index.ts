@@ -9,7 +9,8 @@ import { Pool } from "pg";
 import * as z from "zod";
 import type { ViteDevServer } from "vite";
 import type { RenderedPage } from "../src/entry-server";
-import { registerCmsRoutes } from "./cms";
+import type { SiteContent } from "../src/lib/site-content-shared";
+import { initializeSiteContent, loadSiteContent, registerCmsRoutes } from "./cms";
 import { registerAuthRoutes } from "./auth";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -25,7 +26,11 @@ const pool = new Pool({ connectionString: process.env["DATABASE_URL"] });
 const app = express();
 const httpServer = createHttpServer(app);
 let viteServerForShutdown: ViteDevServer | undefined;
-let productionRenderer: Promise<{ renderPage: (url: string) => Promise<RenderedPage> }> | undefined;
+type PageRenderer = {
+  defaultSiteContent: SiteContent;
+  renderPage: (url: string, content: SiteContent) => Promise<RenderedPage>;
+};
+let productionRenderer: Promise<PageRenderer> | undefined;
 
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
@@ -126,6 +131,9 @@ async function startServer() {
     app.use(viteServerForShutdown.middlewares);
   }
 
+  const pageRenderer = await loadPageRenderer();
+  await initializeSiteContent(pool, pageRenderer.defaultSiteContent);
+
   app.use(async (request, response, next) => {
     if (request.method !== "GET" || request.path.startsWith("/api/")) {
       next();
@@ -190,15 +198,18 @@ async function viteCleanup() {
 }
 
 async function renderReactPage(url: string): Promise<RenderedPage> {
-  if (viteServerForShutdown) {
-    const serverEntry = await viteServerForShutdown.ssrLoadModule("/src/entry-server.tsx");
-    return serverEntry["renderPage"](url) as Promise<RenderedPage>;
-  }
+  const [renderer, content] = await Promise.all([loadPageRenderer(), loadSiteContent(pool)]);
+  return renderer.renderPage(url, content);
+}
 
+async function loadPageRenderer(): Promise<PageRenderer> {
+  if (viteServerForShutdown) {
+    return viteServerForShutdown.ssrLoadModule("/src/entry-server.tsx") as Promise<PageRenderer>;
+  }
   productionRenderer ??= import(
     pathToFileURL(path.join(projectRoot, "dist", "server", "entry-server.js")).href
-  ) as Promise<{ renderPage: (url: string) => Promise<RenderedPage> }>;
-  return (await productionRenderer).renderPage(url);
+  ) as Promise<PageRenderer>;
+  return productionRenderer;
 }
 
 function injectRenderedPage(template: string, page: RenderedPage): string {
@@ -224,10 +235,22 @@ function injectRenderedPage(template: string, page: RenderedPage): string {
     })
     .join("");
   const pageHtml = template.replace("<!--app-html-->", page.markup);
+  const serializedContent = JSON.stringify(page.siteContent).replace(/[<>&\u2028\u2029]/g, (character) => {
+    const escapes: Record<string, string> = {
+      "<": "\\u003c",
+      ">": "\\u003e",
+      "&": "\\u0026",
+      "\u2028": "\\u2028",
+      "\u2029": "\\u2029",
+    };
+    return escapes[character] ?? character;
+  });
+  const contentBootstrap = `<script id="crevora-site-content" type="application/json">${serializedContent}</script>`;
 
   return pageHtml
     .replace(/<title>[\s\S]*?<\/title>/i, titleMarkup || "<title>CREVORA — Creative with purpose</title>")
-    .replace("</head>", `${metaMarkup}${scriptsMarkup}</head>`);
+    .replace("</head>", `${metaMarkup}${scriptsMarkup}</head>`)
+    .replace(/<\/body>/i, `${contentBootstrap}</body>`);
 }
 
 function escapeHtml(value: string): string {

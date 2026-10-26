@@ -4,7 +4,7 @@ import { StackedWork } from '@/components/studio-signature';
 import { ProcessSection, JournalSection } from '@/components/studio-sections';
 import { IndustryTabs, StatsBlock } from '@/components/luminous-home';
 import { BoldHero, BoldServices, BoldTrusted, BoldWhy } from '@/components/home-bold';
-import { pageHead } from '@/lib/studio-content';
+import { pageHead } from '@/lib/studio-utils';
 
 export const Route = createFileRoute('/')({
   head: () => {

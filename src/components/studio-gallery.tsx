@@ -3,9 +3,10 @@ import { ArrowUpRight } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { gallery } from '@/lib/studio-content';
+import { useSiteContent } from '@/lib/site-content-context';
 
 export function StudioGallery() {
+  const { gallery } = useSiteContent();
   const [selected, setSelected] = useState<number | null>(null);
   const item = selected === null ? null : gallery[selected];
   const pin = useRef<HTMLDivElement>(null);

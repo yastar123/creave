@@ -2,7 +2,8 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowUpRight, Play } from 'lucide-react';
 import { StudioShell } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
-import { gallery, pageHead } from '@/lib/studio-content';
+import { pageHead } from '@/lib/studio-utils';
+import { useSiteContent } from '@/lib/site-content-context';
 
 export const Route = createFileRoute('/social-media-portfolio')({
   head: () => pageHead('Social Media Portfolio — Reels, TikTok & Content', 'Short-form video, Instagram and TikTok content created by CREVORA for brands in Namibia.'),
@@ -12,6 +13,7 @@ export const Route = createFileRoute('/social-media-portfolio')({
 const platforms = ['Instagram Reels', 'TikTok', 'Instagram Feed', 'YouTube Shorts', 'Carousel'];
 
 function SocialPortfolio() {
+  const { gallery } = useSiteContent();
   return <StudioShell>
     <section className="inner-hero"><span className="eyebrow">SOCIAL MEDIA PORTFOLIO</span><h1>Made for<br />the feed.</h1><p>Short-form video, carousels and social content — shown the way your audience sees it. Sample work for now; real client content follows.</p></section>
     <section className="phone-wall section-pad" aria-label="Social media work">{gallery.map((g, i) => <figure key={g.title} className={`phone-frame phone-frame-${i % 3} reveal`}>
