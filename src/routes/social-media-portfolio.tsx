@@ -1,0 +1,23 @@
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { ArrowUpRight, Play } from 'lucide-react';
+import { StudioShell } from '@/components/studio-shell';
+import { Button } from '@/components/ui/button';
+import { gallery, pageHead } from '@/lib/studio-content';
+
+export const Route = createFileRoute('/social-media-portfolio')({
+  head: () => pageHead('Social Media Portfolio — Reels, TikTok & Content', 'Short-form video, Instagram and TikTok content created by CREVORA for brands in Namibia.'),
+  component: SocialPortfolio,
+});
+
+const platforms = ['Instagram Reels', 'TikTok', 'Instagram Feed', 'YouTube Shorts', 'Carousel'];
+
+function SocialPortfolio() {
+  return <StudioShell>
+    <section className="inner-hero"><span className="eyebrow">SOCIAL MEDIA PORTFOLIO</span><h1>Made for<br />the feed.</h1><p>Short-form video, carousels and social content — shown the way your audience sees it. Sample work for now; real client content follows.</p></section>
+    <section className="phone-wall section-pad" aria-label="Social media work">{gallery.map((g, i) => <figure key={g.title} className={`phone-frame phone-frame-${i % 3} reveal`}>
+      <div className="phone-screen"><img src={g.image} alt={g.alt} loading="lazy" /><span className="phone-play" aria-hidden="true"><Play size={18} /></span></div>
+      <figcaption><strong>{g.title}</strong><span>{platforms[i % platforms.length]}</span></figcaption>
+    </figure>)}</section>
+    <section className="section-pad article-related"><span className="eyebrow">Want content like this?</span><Button variant="studio" asChild><Link to="/social-media-management-namibia">Explore Social Media Marketing <ArrowUpRight /></Link></Button></section>
+  </StudioShell>;
+}

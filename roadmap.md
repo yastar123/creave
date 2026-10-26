@@ -1,0 +1,8 @@
+- [x] Add lightweight staggered title, menu, and footer animations.
+- [x] Verify page navigation, interactions, and reduced-motion rendering.
+- [x] Replace homepage service images with licensed online videos.
+- [x] Verify video playback, pause, service links, and small-screen layout.
+- [x] Redesign the homepage opening with a distinctive editorial layout.
+- [x] Verify opening layout and navigation on desktop and mobile.
+- [x] Make the homepage opening fill the visitor's whole screen on first load.
+- [x] Add scroll animation to the homepage service cards and verify reveal, footage drift, and reduced motion.

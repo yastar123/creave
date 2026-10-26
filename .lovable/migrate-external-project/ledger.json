@@ -1,0 +1,11 @@
+{
+  "source": "code-archive",
+  "project": "CREVORA — independent creative studio (Namibia), Lovable TanStack Start export",
+  "capabilities": [
+    {"capability": "code", "source": "zip export", "outcome": "imported into project", "status": "verified", "next_action": null},
+    {"capability": "records", "source": "none — site has no database", "outcome": "not applicable", "status": "verified", "next_action": null},
+    {"capability": "auth", "source": "none — site has no login", "outcome": "not applicable", "status": "verified", "next_action": null},
+    {"capability": "assets", "source": "6 lovable-asset pointers + 4 local webp", "outcome": "binaries re-registered to this project", "status": "verified", "next_action": null},
+    {"capability": "external providers", "source": "licensed online videos referenced by URL", "outcome": "preserved", "status": "verified", "next_action": null}
+  ]
+}
