@@ -1,1 +1,2 @@
 - [Imported Bun setup](imported-bun-setup.md) — restoring dependencies may not revive an already-failed workflow; inspect and restart it once installation finishes.
+- [Imported PostgreSQL setup](imported-postgres-setup.md) — a successful DB connection does not guarantee the imported database has the app schema.
