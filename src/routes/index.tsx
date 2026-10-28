@@ -4,6 +4,7 @@ import { StackedWork } from '@/components/studio-signature';
 import { ProcessSection, JournalSection } from '@/components/studio-sections';
 import { IndustryTabs, StatsBlock } from '@/components/luminous-home';
 import { BoldHero, BoldServices, BoldTrusted, BoldWhy } from '@/components/home-bold';
+import { CmsPageBlock } from '@/components/cms-sections';
 import { pageHead } from '@/lib/studio-utils';
 
 export const Route = createFileRoute('/')({
@@ -17,15 +18,15 @@ export const Route = createFileRoute('/')({
 function Index() {
   return <StudioShell darkHeader>
     <div className="lh-page">
-      <BoldHero />
-      <BoldServices />
-      <BoldTrusted />
-      <IndustryTabs />
-      <StatsBlock />
-      <StackedWork />
-      <BoldWhy />
-      <ProcessSection />
-      <JournalSection />
+      <CmsPageBlock sectionId="hero"><BoldHero /></CmsPageBlock>
+      <CmsPageBlock sectionId="services"><BoldServices /></CmsPageBlock>
+      <CmsPageBlock sectionId="trusted"><BoldTrusted /></CmsPageBlock>
+      <CmsPageBlock sectionId="industries"><IndustryTabs /></CmsPageBlock>
+      <CmsPageBlock sectionId="stats"><StatsBlock /></CmsPageBlock>
+      <CmsPageBlock sectionId="work"><StackedWork /></CmsPageBlock>
+      <CmsPageBlock sectionId="why"><BoldWhy /></CmsPageBlock>
+      <CmsPageBlock sectionId="process"><ProcessSection /></CmsPageBlock>
+      <CmsPageBlock sectionId="journal"><JournalSection /></CmsPageBlock>
     </div>
   </StudioShell>;
 }

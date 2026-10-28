@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { StudioMotion } from '@/components/studio-motion';
 import { StudioFx } from '@/components/studio-fx';
 import { StudioChoreography } from '@/components/studio-choreography';
-import { CmsPageSections } from '@/components/cms-sections';
+import { CmsPageContent, CmsPageSections } from '@/components/cms-sections';
 import { usePublicCmsGlobals } from '@/lib/cms-client';
 import { useSiteContent } from '@/lib/site-content-context';
 
@@ -150,7 +150,12 @@ export function StudioShell({ children, darkHeader = false }: { children: ReactN
       <div className="menu-bottom"><span>Social-first creative agency.<br />Windhoek, Namibia.</span><a href={whatsapp} target="_blank" rel="noreferrer"><MessageCircle size={18} /> Say hello on WhatsApp</a></div>
     </div>}
     <div className="scroll-progress" aria-hidden="true" />
-    <main id="main-content" key={location.pathname} className="page-enter">{children}<CmsPageSections pageId={pageId} /></main>
+    <main id="main-content" key={location.pathname} className="page-enter">
+      <CmsPageContent pageId={pageId}>
+        {children}
+        <CmsPageSections pageId={pageId} />
+      </CmsPageContent>
+    </main>
     <a className="whatsapp-fab" href={whatsapp} target="_blank" rel="noreferrer" aria-label="Chat with CREVORA on WhatsApp"><MessageCircle size={20} /><span>WhatsApp</span></a>
     <footer className="studio-footer">
       <div className="footer-top"><span className="eyebrow"><span className="status-dot" /> {cmsGlobals?.footer["availability"] || 'Taking on new projects'}</span><span className="footer-location">{cmsGlobals?.footer["description"] || <>Partnering with Namibian businesses through strategic digital marketing, branding, and creative solutions.<br />Serving businesses across Namibia and international markets.</>}</span></div>

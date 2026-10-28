@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import * as z from "zod";
 import { cmsPages, cmsPageIds, cmsSectionTypes, type CmsSection } from "../src/lib/cms-shared";
+import { getCmsPageDefaultSections } from "../src/lib/cms-page-defaults";
 import {
   collectionItemIdentity,
   siteContentCollectionKeys,
@@ -46,13 +47,22 @@ export async function initializeSiteContent(pool: Pool, defaults: SiteContent) {
 
 export async function initializeCmsPages(pool: Pool) {
   for (const page of cmsPages) {
+    const sections = getCmsPageDefaultSections(page.id);
     await pool.query(
-      `INSERT INTO public.cms_pages (page_id, title, route, is_custom, sections, updated_at)
-       VALUES ($1, $2, $3, FALSE, '[]'::jsonb, NOW())
+      `INSERT INTO public.cms_pages (page_id, title, route, is_custom, sections, sections_seeded, updated_at)
+       VALUES ($1, $2, $3, FALSE, $4::jsonb, TRUE, NOW())
        ON CONFLICT (page_id) DO UPDATE
-       SET title = EXCLUDED.title, route = EXCLUDED.route
+       SET title = EXCLUDED.title,
+           route = EXCLUDED.route,
+           sections = CASE
+             WHEN public.cms_pages.sections_seeded = FALSE
+               AND public.cms_pages.sections = '[]'::jsonb
+             THEN EXCLUDED.sections
+             ELSE public.cms_pages.sections
+           END,
+           sections_seeded = TRUE
        WHERE public.cms_pages.is_custom = FALSE`,
-      [page.id, page.title, page.route],
+      [page.id, page.title, page.route, JSON.stringify(sections)],
     );
   }
 }

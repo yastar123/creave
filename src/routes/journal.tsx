@@ -4,6 +4,7 @@ import { StudioShell } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
 import { formatDate, pageHead } from '@/lib/studio-utils';
 import { useSiteContent } from '@/lib/site-content-context';
+import { CmsPageBlock, CmsText } from '@/components/cms-sections';
 
 const PER_PAGE = 6;
 type Search = { category?: string | undefined; page?: number | undefined };
@@ -27,8 +28,8 @@ function Journal() {
   const list = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
 
   return <StudioShell>
-    <section className="inner-hero"><span className="eyebrow">THINKING OUT LOUD</span><h1>Ideas worth<br />a closer look.</h1><p>Observations, useful questions and fresh perspectives on building brands that connect.</p></section>
-    <section className="journal-section section-pad">
+    <CmsPageBlock sectionId="hero"><section className="inner-hero"><span className="eyebrow">THINKING OUT LOUD</span><h1><CmsText sectionId="hero" field="headingStart">Ideas worth</CmsText><br /><CmsText sectionId="hero" field="headingEnd">a closer look.</CmsText></h1><p><CmsText sectionId="hero" field="body">Observations, useful questions and fresh perspectives on building brands that connect.</CmsText></p></section></CmsPageBlock>
+    <CmsPageBlock sectionId="articles"><section className="journal-section section-pad">
       <nav className="journal-filters" aria-label="Filter articles by category">
         <Link to="/journal" search={{}} className="journal-filter" data-active={!category}>All</Link>
         {journalCategories.map(c => <Link key={c} to="/journal" search={{ category: c }} className="journal-filter" data-active={category === c}>{c}</Link>)}
@@ -45,6 +46,6 @@ function Journal() {
         <span>Page {current} of {pages}</span>
         {current < pages ? <Link to="/journal" search={{ category, page: current + 1 }} aria-label="Next page">Next <ArrowRight size={16} /></Link> : <span />}
       </nav>}
-    </section>
+    </section></CmsPageBlock>
   </StudioShell>;
 }

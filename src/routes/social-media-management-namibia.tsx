@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowUpRight, Plus, Minus } from 'lucide-react';
 import { StudioShell, whatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
+import { CmsPageBlock, CmsText } from '@/components/cms-sections';
 import { pageHead } from '@/lib/studio-utils';
 
 const packages = [
@@ -104,8 +105,8 @@ function Social() {
   return <StudioShell>
     <section className="inner-hero">
       <span className="eyebrow">SOCIAL MEDIA MANAGEMENT SERVICES IN NAMIBIA</span>
-      <h1>Strategy first.<br />Then <span>content.</span></h1>
-      <p>Our Social Media 360° approach is a strategic social media marketing ecosystem designed to communicate your brand’s message to the right audience with clarity and intent.</p>
+      <h1><CmsText sectionId="hero" field="headingStart">Strategy first.</CmsText><br /><CmsText sectionId="hero" field="headingEnd">Then <span>content.</span></CmsText></h1>
+      <p><CmsText sectionId="hero" field="body">Our Social Media 360° approach is a strategic social media marketing ecosystem designed to communicate your brand’s message to the right audience with clarity and intent.</CmsText></p>
       <div className="hero-actions">
         <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Request a private discussion <ArrowUpRight /></a></Button>
       </div>
@@ -116,8 +117,8 @@ function Social() {
       <div className="sm-intro-grid">
         <span className="eyebrow">CREVORA — STRATEGIC CREATIVE AGENCY</span>
         <div>
-          <p>Crevora provides professional social media management services for businesses in Namibia. Our Social Media 360° approach is a strategic social media marketing ecosystem designed to communicate your brand’s message to the right audience with clarity and intent.</p>
-          <p>We focus on building brand awareness, credibility, and trust while clearly positioning your brand’s value. We aren’t just publishing content for visibility; we implement data-driven social media marketing to ensure every post serves a purpose. Beyond reach and impressions, our social media management helps brands attract the right audience, nurture engaged communities, strengthen social proof, and turn social media marketing into a sustainable growth channel that supports long-term marketing efficiency and revenue growth.</p>
+          <p><CmsText sectionId="intro" field="paragraph1">Crevora provides professional social media management services for businesses in Namibia. Our Social Media 360° approach is a strategic social media marketing ecosystem designed to communicate your brand’s message to the right audience with clarity and intent.</CmsText></p>
+          <p><CmsText sectionId="intro" field="paragraph2">We focus on building brand awareness, credibility, and trust while clearly positioning your brand’s value. We aren’t just publishing content for visibility; we implement data-driven social media marketing to ensure every post serves a purpose. Beyond reach and impressions, our social media management helps brands attract the right audience, nurture engaged communities, strengthen social proof, and turn social media marketing into a sustainable growth channel that supports long-term marketing efficiency and revenue growth.</CmsText></p>
         </div>
       </div>
     </section>
@@ -125,8 +126,8 @@ function Social() {
     <section className="sm-packages section-pad" id="packages">
       <div className="section-heading reveal">
         <span className="eyebrow">SOCIAL MEDIA MANAGEMENT PACKAGES</span>
-        <h2>Pick the pace<br />of your <span>growth.</span></h2>
-        <p>All packages are strategy-led and tailored to each brand’s objectives and audience. All plans exclude VAT.</p>
+        <h2><CmsText sectionId="packages" field="headingStart">Pick the pace</CmsText><br /><CmsText sectionId="packages" field="headingEnd">of your <span>growth.</span></CmsText></h2>
+        <p><CmsText sectionId="packages" field="body">All packages are strategy-led and tailored to each brand’s objectives and audience. All plans exclude VAT.</CmsText></p>
       </div>
       <div className="sm-package-grid">
         {packages.map((pkg, i) => <article className={`sm-package ${pkg.featured ? 'is-featured' : ''}`} key={pkg.tier}>
@@ -147,7 +148,7 @@ function Social() {
     <section className="sm-faq section-pad">
       <div className="section-heading reveal">
         <span className="eyebrow">EVERYTHING YOU NEED TO KNOW</span>
-        <h2>Good questions,<br />clear <span>answers.</span></h2>
+        <h2><CmsText sectionId="faq" field="headingStart">Good questions,</CmsText><br /><CmsText sectionId="faq" field="headingEnd">clear <span>answers.</span></CmsText></h2>
       </div>
       <div className="sm-faq-list">
         {faqs.map((faq, i) => <div className={`sm-faq-item ${active === i ? 'is-active' : ''}`} key={faq.q}>
@@ -168,8 +169,8 @@ function Social() {
     <section className="approach-section">
       <div className="approach-copy reveal">
         <span className="eyebrow">Social Media 360°</span>
-        <h2>No noise.<br /><span>Strategy that works.</span></h2>
-        <p>Every post with a purpose, every video with a face, every month with a plan. That is how social media becomes a growth channel — not just a feed.</p>
+        <h2><CmsText sectionId="approach" field="headingStart">No noise.</CmsText><br /><span><CmsText sectionId="approach" field="headingEnd">Strategy that works.</CmsText></span></h2>
+        <p><CmsText sectionId="approach" field="body">Every post with a purpose, every video with a face, every month with a plan. That is how social media becomes a growth channel — not just a feed.</CmsText></p>
         <div className="approach-pillars">{[
           ['Strategy-led', 'Content planned around your business goals, not the algorithm of the week.'],
           ['Human-first', 'Faces build trust faster than graphics. We put people at the centre.'],

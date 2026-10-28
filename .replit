@@ -27,7 +27,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "for node_bin in /nix/store/*-nodejs-22.*-wrapped/bin; do if [ -x \"$node_bin/npm\" ]; then PATH=\"$node_bin:$PATH\"; break; fi; done; export NODE_ENV=development; exec npm run dev"
+args = "for node_bin in /nix/store/*-nodejs-22.*-wrapped/bin; do if [ -x \"$node_bin/npm\" ]; then PATH=\"$node_bin:$PATH\"; break; fi; done; export NODE_ENV=development DB_PUSH_TARGET=development; npm run db:push && exec npm run dev"
 waitForPort = 5000
 
 [[ports]]

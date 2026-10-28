@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowUpRight, Plus, Minus } from 'lucide-react';
 import { StudioShell, whatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
+import { CmsPageBlock, CmsText } from '@/components/cms-sections';
 import { pageHead } from '@/lib/studio-utils';
 
 const packages = [
@@ -112,32 +113,32 @@ export const Route = createFileRoute('/web-solutions-namibia')({
 function Web() {
   const [active, setActive] = useState<number | null>(0);
   return <StudioShell>
-    <section className="inner-hero">
+    <CmsPageBlock sectionId="hero"><section className="inner-hero">
       <span className="eyebrow">BUSINESS WEBSITE DESIGN & DEVELOPMENT IN NAMIBIA</span>
-      <h1>Websites that build<br /><span>trust</span> — and business.</h1>
-      <p>A business website is not just an online presence. It is where trust is built, credibility is proven, and real decisions are made.</p>
+      <h1><CmsText sectionId="hero" field="headingStart">Websites that build</CmsText><br /><span><CmsText sectionId="hero" field="headingAccent">trust</CmsText></span> <CmsText sectionId="hero" field="headingEnd">— and business.</CmsText></h1>
+      <p><CmsText sectionId="hero" field="body">A business website is not just an online presence. It is where trust is built, credibility is proven, and real decisions are made.</CmsText></p>
       <div className="hero-actions">
-        <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Request a private discussion <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer"><CmsText sectionId="hero" field="buttonLabel">Request a private discussion</CmsText> <ArrowUpRight /></a></Button>
       </div>
-    </section>
+    </section></CmsPageBlock>
 
-    <ServiceVisual kind="web" />
-    <section className="sm-intro section-pad">
+    <CmsPageBlock sectionId="visual"><ServiceVisual kind="web" /></CmsPageBlock>
+    <CmsPageBlock sectionId="intro"><section className="sm-intro section-pad">
       <div className="sm-intro-grid">
         <span className="eyebrow">CREVORA — STRATEGIC CREATIVE AGENCY</span>
         <div>
-          <p>Crevora provides strategic business website design and development services for companies in Namibia.</p>
-          <p>A business website is not just an online presence. It is where trust is built, credibility is proven, and real decisions are made. Our Business Website Solutions help brands clearly communicate who they are, what they offer, and why they matter. We focus on structure, messaging, and user experience so your website supports real business goals, not just looking good.</p>
-          <p>From the first impression to the final action, we build websites that guide visitors, strengthen brand perception, and turn attention into meaningful engagement.</p>
+          <p><CmsText sectionId="intro" field="paragraph1">Crevora provides strategic business website design and development services for companies in Namibia.</CmsText></p>
+          <p><CmsText sectionId="intro" field="paragraph2">A business website is not just an online presence. It is where trust is built, credibility is proven, and real decisions are made. Our Business Website Solutions help brands clearly communicate who they are, what they offer, and why they matter. We focus on structure, messaging, and user experience so your website supports real business goals, not just looking good.</CmsText></p>
+          <p><CmsText sectionId="intro" field="paragraph3">From the first impression to the final action, we build websites that guide visitors, strengthen brand perception, and turn attention into meaningful engagement.</CmsText></p>
         </div>
       </div>
-    </section>
+    </section></CmsPageBlock>
 
-    <section className="sm-packages section-pad" id="packages">
+    <CmsPageBlock sectionId="packages"><section className="sm-packages section-pad" id="packages">
       <div className="section-heading reveal">
         <span className="eyebrow">WEBSITE PACKAGES</span>
-        <h2>Choose the site<br />your business <span>deserves.</span></h2>
-        <p>All website packages are strategy-led and tailored to each business’s goals, structure, and audience journey. All plans exclude VAT.</p>
+        <h2><CmsText sectionId="packages" field="headingStart">Choose the site</CmsText><br /><CmsText sectionId="packages" field="headingEnd">your business deserves.</CmsText></h2>
+        <p><CmsText sectionId="packages" field="body">All website packages are strategy-led and tailored to each business’s goals, structure, and audience journey. All plans exclude VAT.</CmsText></p>
       </div>
       <div className="sm-package-grid">
         {packages.map((pkg, i) => <article className={`sm-package ${pkg.featured ? 'is-featured' : ''}`} key={pkg.tier}>
@@ -154,12 +155,12 @@ function Web() {
           </div>
         </article>)}
       </div>
-    </section>
+    </section></CmsPageBlock>
 
-    <section className="sm-faq section-pad">
+    <CmsPageBlock sectionId="faq"><section className="sm-faq section-pad">
       <div className="section-heading reveal">
         <span className="eyebrow">EVERYTHING YOU NEED TO KNOW</span>
-        <h2>Good questions,<br />clear <span>answers.</span></h2>
+        <h2><CmsText sectionId="faq" field="headingStart">Good questions,</CmsText><br /><CmsText sectionId="faq" field="headingEnd">clear answers.</CmsText></h2>
       </div>
       <div className="sm-faq-list">
         {faqs.map((faq, i) => <div className={`sm-faq-item ${active === i ? 'is-active' : ''}`} key={faq.q}>
@@ -175,13 +176,13 @@ function Web() {
         <p>Still deciding? Let’s talk about which package fits your business.</p>
         <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
       </div>
-    </section>
+    </section></CmsPageBlock>
 
-    <section className="approach-section">
+    <CmsPageBlock sectionId="approach"><section className="approach-section">
       <div className="approach-copy reveal">
         <span className="eyebrow">Business Web Solutions</span>
-        <h2>Built to last.<br /><span>Designed to convert.</span></h2>
-        <p>Structure, messaging and user experience working together — so your website turns attention into trust, and trust into business.</p>
+        <h2><CmsText sectionId="approach" field="headingStart">Built to last.</CmsText><br /><span><CmsText sectionId="approach" field="headingEnd">Designed to convert.</CmsText></span></h2>
+        <p><CmsText sectionId="approach" field="body">Structure, messaging and user experience working together — so your website turns attention into trust, and trust into business.</CmsText></p>
         <div className="approach-pillars">{[
           ['Strategy-led', 'Every page built around your business goals and audience journey.'],
           ['No lock-in', 'Flexible platforms — you own your website and can move it anytime.'],
@@ -189,6 +190,6 @@ function Web() {
         ].map(([t, d]) => <div key={t}><strong>{t}</strong><span>{d}</span></div>)}</div>
         <Button variant="studioLight" asChild><Link to="/contact">Start the conversation <ArrowUpRight /></Link></Button>
       </div>
-    </section>
+    </section></CmsPageBlock>
   </StudioShell>;
 }

@@ -6,6 +6,7 @@ import { StudioShell, whatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
 import { pageHead } from '@/lib/studio-utils';
 import { useSiteContent } from '@/lib/site-content-context';
+import { CmsPageBlock, CmsText } from '@/components/cms-sections';
 
 type FieldKey = 'name' | 'company' | 'email' | 'phone' | 'interest' | 'message' | 'privacyConsent';
 
@@ -94,28 +95,28 @@ function Contact() {
   }
 
   return <StudioShell>
-    <section className="inner-hero">
+    <CmsPageBlock sectionId="hero"><section className="inner-hero">
       <span className="eyebrow">CONTACT CREVORA</span>
-      <h1>Let’s talk about<br />your <span>brand.</span></h1>
-      <p>Reaching out doesn’t mean you have to be ready with everything figured out. Sometimes it starts with a question, an idea, or a problem you want to solve.</p>
+      <h1><CmsText sectionId="hero" field="headingStart">Let’s talk about</CmsText><br /><CmsText sectionId="hero" field="headingEnd">your brand.</CmsText></h1>
+      <p><CmsText sectionId="hero" field="body">Reaching out doesn’t mean you have to be ready with everything figured out. Sometimes it starts with a question, an idea, or a problem you want to solve.</CmsText></p>
       <div className="hero-actions">
-        <Button variant="studio" asChild><a href="#discussion">Start a private discussion <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href="#discussion"><CmsText sectionId="hero" field="buttonLabel">Start a private discussion</CmsText> <ArrowUpRight /></a></Button>
       </div>
-    </section>
+    </section></CmsPageBlock>
 
-    <section className="sm-intro section-pad">
+    <CmsPageBlock sectionId="intro"><section className="sm-intro section-pad">
       <div className="sm-intro-grid">
         <span className="eyebrow">NO PRESSURE</span>
         <div>
-          <p>No pressure. No commitments. Just a discussion.</p>
-          <p>If you’re exploring how to build stronger brand authority through strategy and content, we’re open to a private discussion.</p>
+          <p><CmsText sectionId="intro" field="paragraph1">No pressure. No commitments. Just a discussion.</CmsText></p>
+          <p><CmsText sectionId="intro" field="paragraph2">If you’re exploring how to build stronger brand authority through strategy and content, we’re open to a private discussion.</CmsText></p>
         </div>
       </div>
-    </section>
+    </section></CmsPageBlock>
 
     <section className="contact-layout section-pad" id="discussion">
-      <div className="contact-info">
-        <h2>Chat via<br />WhatsApp.</h2>
+      <CmsPageBlock sectionId="details"><div className="contact-info">
+        <h2><CmsText sectionId="details" field="headingStart">Chat via</CmsText><br /><CmsText sectionId="details" field="headingEnd">WhatsApp.</CmsText></h2>
         <div className="contact-links">
           <a href="mailto:hello@crevora.co">hello@crevora.co <ArrowUpRight className="inline" size={18} /></a>
           <a href="tel:+264815781719">+264 81 578 1719</a>
@@ -123,9 +124,9 @@ function Contact() {
           <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer"><MessageCircle /> Chat via WhatsApp <ArrowUpRight /></a></Button>
         </div>
         <p>Serving businesses across Namibia and international markets.</p>
-      </div>
+      </div></CmsPageBlock>
 
-      <form className="contact-form" onSubmit={submit} noValidate>
+      <CmsPageBlock sectionId="form"><form className="contact-form" onSubmit={submit} noValidate>
         <div className="hp-field" aria-hidden="true"><label>Leave this field empty<input tabIndex={-1} autoComplete="off" value={hp} onChange={e => setHp(e.target.value)} /></label></div>
         <Field label="Your full name" error={errors.name}>
           <input required maxLength={100} autoComplete="name" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Who are we talking to?" aria-invalid={!!errors.name} />
@@ -160,7 +161,7 @@ function Contact() {
           {status === 'error' && <p className="form-message form-message-error">{Object.keys(errors).length ? 'Please check the highlighted fields and try again.' : submitError || 'Something went wrong. Please try again, or chat with us directly on WhatsApp.'}</p>}
         </div>
         {status === 'sent' && whatsappUrl && <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Continue to WhatsApp <ArrowUpRight /></a></Button>}
-      </form>
+      </form></CmsPageBlock>
     </section>
   </StudioShell>;
 }

@@ -1,7 +1,59 @@
+import { createContext, useContext, type ReactNode } from "react";
 import { ArrowUpRight } from "lucide-react";
 
 import { usePublicCmsPage } from "@/lib/cms-client";
+import { cmsPageDefaultSections } from "@/lib/cms-page-defaults";
 import type { CmsSection } from "@/lib/cms-shared";
+
+type CmsPageContextValue = {
+  pageId: string;
+  sections: CmsSection[];
+  loaded: boolean;
+};
+
+const CmsPageContext = createContext<CmsPageContextValue>({
+  pageId: "",
+  sections: [],
+  loaded: false,
+});
+
+export function CmsPageContent({ pageId, children }: { pageId: string; children: ReactNode }) {
+  const query = usePublicCmsPage(pageId);
+  const defaults = cmsPageDefaultSections[pageId] ?? [];
+  const sections = query.data?.sections ?? defaults;
+  return (
+    <CmsPageContext.Provider value={{ pageId, sections, loaded: query.isSuccess || query.isError }}>
+      {children}
+    </CmsPageContext.Provider>
+  );
+}
+
+export function useCmsPageSections() {
+  return useContext(CmsPageContext).sections;
+}
+
+export function CmsText({
+  sectionId,
+  field,
+  children,
+}: {
+  sectionId: string;
+  field: string;
+  children: string;
+}) {
+  const { sections } = useContext(CmsPageContext);
+  const section = sections.find((item) => item.id === sectionId);
+  return section && Object.prototype.hasOwnProperty.call(section.fields, field)
+    ? section.fields[field]
+    : children;
+}
+
+export function CmsPageBlock({ sectionId, children }: { sectionId: string; children: ReactNode }) {
+  const { sections, loaded } = useContext(CmsPageContext);
+  const section = sections.find((item) => item.id === sectionId);
+  if (!section) return loaded ? null : children;
+  return section.enabled ? children : null;
+}
 
 function lines(value: string | undefined) {
   return (value ?? "").split("\n").map((line) => line.trim()).filter(Boolean);
@@ -95,8 +147,11 @@ export function CmsSectionPreview({ section }: { section: CmsSection }) {
 }
 
 export function CmsPageSections({ pageId }: { pageId: string }) {
-  const query = usePublicCmsPage(pageId);
-  if (!pageId || query.isLoading || query.isError || !query.data?.sections.length) return null;
+  const { pageId: currentPageId, sections } = useContext(CmsPageContext);
+  if (!pageId || currentPageId !== pageId || !sections.length) return null;
+  const seededIds = new Set((cmsPageDefaultSections[pageId] ?? []).map((section) => section.id));
+  const additional = sections.filter((section) => !seededIds.has(section.id));
+  if (!additional.length) return null;
 
-  return <div className="cms-public-sections">{query.data.sections.map((section) => <CmsSectionPreview key={section.id} section={section} />)}</div>;
+  return <div className="cms-public-sections">{additional.map((section) => <CmsSectionPreview key={section.id} section={section} />)}</div>;
 }

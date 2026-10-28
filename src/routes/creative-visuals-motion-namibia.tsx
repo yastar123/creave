@@ -3,6 +3,7 @@ import { ServiceVisual } from '@/components/service-visual';
 import { ArrowUpRight } from 'lucide-react';
 import { StudioShell, whatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
+import { CmsPageBlock, CmsText } from '@/components/cms-sections';
 import { pageHead } from '@/lib/studio-utils';
 
 const covers = [
@@ -33,52 +34,52 @@ export const Route = createFileRoute('/creative-visuals-motion-namibia')({
   component: CreativeVisualsMotion,
 });
 
-function List({ eyebrow, title, intro, items, outro }: { eyebrow: string; title: React.ReactNode; intro?: string[]; items: string[]; outro?: string }) {
-  return <section className="sm-packages section-pad">
+function List({ sectionId, eyebrow, title, intro, items, outro }: { sectionId: string; eyebrow: string; title: React.ReactNode; intro?: string[]; items: string[]; outro?: string }) {
+  return <CmsPageBlock sectionId={sectionId}><section className="sm-packages section-pad">
     <div className="section-heading reveal">
-      <span className="eyebrow">{eyebrow}</span>
+      <span className="eyebrow"><CmsText sectionId={sectionId} field="eyebrow">{eyebrow}</CmsText></span>
       <h2>{title}</h2>
-      {intro?.map(p => <p key={p}>{p}</p>)}
+      {intro?.map((p, i) => <p key={p}><CmsText sectionId={sectionId} field={`paragraph${i}`}>{p}</CmsText></p>)}
     </div>
     <div className="sm-package-grid is-single">
       <article className="sm-package">
         <div className="sm-package-body">
-          <ul>{items.map(f => <li key={f}>{f}</li>)}</ul>
+          <ul>{items.map((f, i) => <li key={f}><CmsText sectionId={sectionId} field={`item${i}`}>{f}</CmsText></li>)}</ul>
         </div>
       </article>
     </div>
-    {outro && <div className="sm-faq-cta reveal"><p>{outro}</p></div>}
-  </section>;
+    {outro && <div className="sm-faq-cta reveal"><p><CmsText sectionId={sectionId} field="outro">{outro}</CmsText></p></div>}
+  </section></CmsPageBlock>;
 }
 
 function CreativeVisualsMotion() {
   return <StudioShell>
-    <section className="inner-hero">
+    <CmsPageBlock sectionId="hero"><section className="inner-hero">
       <span className="eyebrow">CREATIVE VISUALS & MOTION IN NAMIBIA</span>
       <h1>Creative visuals &<br /><span>motion</span> that communicate,<br />not just decorate.</h1>
       <p>Strategic creative visuals and motion graphics for businesses in Namibia — high-impact assets that make people stop, pay attention, and understand.</p>
       <div className="hero-actions">
         <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Discuss your vision <ArrowUpRight /></a></Button>
       </div>
-    </section>
+    </section></CmsPageBlock>
 
-    <ServiceVisual kind="motion" />
-    <section className="sm-intro section-pad">
+    <CmsPageBlock sectionId="visual"><ServiceVisual kind="motion" /></CmsPageBlock>
+    <CmsPageBlock sectionId="intro"><section className="sm-intro section-pad">
       <div className="sm-intro-grid">
         <span className="eyebrow">GOOD VISUALS DO MORE THAN LOOK GOOD</span>
         <div>
-          <p>Good visuals don’t just look good. They make people stop, pay attention, and understand.</p>
-          <p>In fast-moving digital environments, static content is easy to ignore. Motion and strong visuals help brands communicate messages faster, clearer, and with stronger impact.</p>
-          <p>Crevora helps businesses in Namibia turn ideas, offers, and campaigns into high-impact visual and motion assets that support real marketing goals.</p>
+          <p><CmsText sectionId="intro" field="paragraph1">Good visuals don’t just look good. They make people stop, pay attention, and understand.</CmsText></p>
+          <p><CmsText sectionId="intro" field="paragraph2">In fast-moving digital environments, static content is easy to ignore. Motion and strong visuals help brands communicate messages faster, clearer, and with stronger impact.</CmsText></p>
+          <p><CmsText sectionId="intro" field="paragraph3">Crevora helps businesses in Namibia turn ideas, offers, and campaigns into high-impact visual and motion assets that support real marketing goals.</CmsText></p>
         </div>
       </div>
-    </section>
+    </section></CmsPageBlock>
 
-    <section className="sm-packages section-pad">
+    <CmsPageBlock sectionId="packages"><section className="sm-packages section-pad">
       <div className="section-heading reveal">
         <span className="eyebrow">WHAT THIS SERVICE COVERS</span>
-        <h2>Built for<br />the <span>campaign.</span></h2>
-        <p>Each creative project is built to support specific campaign objectives, platforms, and audience behavior.</p>
+        <h2><CmsText sectionId="packages" field="headingStart">Built for</CmsText><br />the <span><CmsText sectionId="packages" field="headingEnd">campaign.</CmsText></span></h2>
+        <p><CmsText sectionId="packages" field="body">Each creative project is built to support specific campaign objectives, platforms, and audience behavior.</CmsText></p>
         <p>Our Creative Visual & Motion Production may include:</p>
       </div>
       <div className="sm-package-grid is-single">
@@ -88,17 +89,17 @@ function CreativeVisualsMotion() {
           </div>
         </article>
       </div>
-    </section>
+    </section></CmsPageBlock>
 
-    <List eyebrow="WHY MOTION MATTERS" title={<>Motion is the<br /><span>language</span> of engagement.</>} intro={['In today’s digital landscape, motion is the language of engagement.', 'High-quality motion graphics help you:']} items={benefits} />
+    <List sectionId="benefits" eyebrow="WHY MOTION MATTERS" title={<>Motion is the<br /><span><CmsText sectionId="benefits" field="headingAccent">language</CmsText></span> of engagement.</>} intro={['In today’s digital landscape, motion is the language of engagement.', 'High-quality motion graphics help you:']} items={benefits} />
 
-    <List eyebrow="WHO THIS IS FOR" title={<>This service<br />is <span>ideal</span> for:</>} items={audience} outro="Let’s discuss your vision and how strategic motion graphics can transform your marketing results." />
+    <List sectionId="audience" eyebrow="WHO THIS IS FOR" title={<>This service<br />is <span><CmsText sectionId="audience" field="headingAccent">ideal</CmsText></span> for:</>} items={audience} outro="Let’s discuss your vision and how strategic motion graphics can transform your marketing results." />
 
-    <section className="sm-faq section-pad">
+    <CmsPageBlock sectionId="approach"><section className="sm-faq section-pad">
       <div className="sm-faq-cta reveal">
-        <p>Ready to make your brand move?</p>
+        <p><CmsText sectionId="approach" field="body">Ready to make your brand move?</CmsText></p>
         <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
       </div>
-    </section>
+    </section></CmsPageBlock>
   </StudioShell>;
 }
