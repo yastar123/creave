@@ -147,7 +147,9 @@ describe("CMS admin login API", () => {
     expect(logout.headers.get("set-cookie")).toContain("Expires=Thu, 01 Jan 1970 00:00:00 GMT");
   });
 
-  it("accepts ADMIN_EMAIL and ADMIN_PASSWORD as the preferred configuration", async () => {
+  it("accepts legacy ADMIN settings when CMS_ADMIN settings are unset", async () => {
+    delete process.env["CMS_ADMIN_EMAIL"];
+    delete process.env["CMS_ADMIN_PASSWORD"];
     process.env["ADMIN_EMAIL"] = "admin@example.test";
     process.env["ADMIN_PASSWORD"] = "test-only-env-admin-password";
 
@@ -162,6 +164,37 @@ describe("CMS admin login API", () => {
 
     expect(login.status).toBe(200);
     expect(await login.json()).toEqual({ authenticated: true, email: "admin@example.test" });
+  });
+
+  it("prefers CMS_ADMIN credentials when both current and legacy settings exist", async () => {
+    process.env["CMS_ADMIN_EMAIL"] = "current@example.test";
+    process.env["CMS_ADMIN_PASSWORD"] = "current-admin-password";
+    process.env["ADMIN_EMAIL"] = "legacy@example.test";
+    process.env["ADMIN_PASSWORD"] = "legacy-admin-password";
+
+    const currentLogin = await fetch(`${origin}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "current@example.test",
+        password: "current-admin-password",
+      }),
+    });
+    const legacyLogin = await fetch(`${origin}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "legacy@example.test",
+        password: "legacy-admin-password",
+      }),
+    });
+
+    expect(currentLogin.status).toBe(200);
+    expect(legacyLogin.status).toBe(401);
+    expect(await currentLogin.json()).toEqual({
+      authenticated: true,
+      email: "current@example.test",
+    });
   });
 
   it("rejects requests when the administrator credentials are not configured", async () => {

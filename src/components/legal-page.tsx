@@ -13,7 +13,7 @@ function LegalContent({ pageId, eyebrow, title, updated, sections }: {
 }) {
   const sectionId = pageId === 'terms' ? 'terms' : 'policy';
   const cmsSection = useCmsPageSections().find((section) => section.id === sectionId);
-  const cmsItems = (cmsSection?.fields.items ?? '')
+  const cmsItems = (cmsSection?.fields["items"] ?? '')
     .split('\n')
     .map((line) => {
       const divider = line.indexOf('|');

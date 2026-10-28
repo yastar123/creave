@@ -24,10 +24,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isSection(value: unknown): value is CmsSection {
-  if (!isRecord(value) || typeof value.id !== "string" || typeof value.title !== "string") return false;
-  if (typeof value.type !== "string" || !cmsSectionTypes.includes(value.type as CmsSection["type"])) return false;
-  if (typeof value.enabled !== "boolean" || !isRecord(value.fields)) return false;
-  return Object.values(value.fields).every((field) => typeof field === "string");
+  if (!isRecord(value) || typeof value["id"] !== "string" || typeof value["title"] !== "string") return false;
+  if (typeof value["type"] !== "string" || !cmsSectionTypes.includes(value["type"] as CmsSection["type"])) return false;
+  if (typeof value["enabled"] !== "boolean" || !isRecord(value["fields"])) return false;
+  return Object.values(value["fields"]).every((field) => typeof field === "string");
 }
 
 function isStringRecord(value: unknown): value is Record<string, string> {
@@ -35,12 +35,12 @@ function isStringRecord(value: unknown): value is Record<string, string> {
 }
 
 export function isCmsPreviewUpdate(value: unknown): value is CmsPreviewUpdate {
-  if (!isRecord(value) || value.type !== CMS_PREVIEW_MESSAGE || typeof value.pageId !== "string") return false;
-  if (value.sections !== undefined && (!Array.isArray(value.sections) || !value.sections.every(isSection))) return false;
-  if (value.globals !== undefined) {
-    if (!isRecord(value.globals)
-      || !isStringRecord(value.globals.navbar)
-      || !isStringRecord(value.globals.footer)) return false;
+  if (!isRecord(value) || value["type"] !== CMS_PREVIEW_MESSAGE || typeof value["pageId"] !== "string") return false;
+  if (value["sections"] !== undefined && (!Array.isArray(value["sections"]) || !value["sections"].every(isSection))) return false;
+  if (value["globals"] !== undefined) {
+    if (!isRecord(value["globals"])
+      || !isStringRecord(value["globals"]["navbar"])
+      || !isStringRecord(value["globals"]["footer"])) return false;
   }
   return true;
 }

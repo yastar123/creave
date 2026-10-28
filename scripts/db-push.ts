@@ -3,11 +3,20 @@ import { readFile } from "node:fs/promises";
 import { Pool } from "pg";
 
 async function pushSchema() {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("db:push is disabled in production. Apply managed database changes through Replit Publish.");
+  const target = process.env.DB_PUSH_TARGET;
+  if (target !== "development" && target !== "production") {
+    throw new Error("Set DB_PUSH_TARGET=development or DB_PUSH_TARGET=production explicitly.");
   }
-  if (process.env.DB_PUSH_TARGET !== "development") {
-    throw new Error("Set DB_PUSH_TARGET=development in .env to confirm this is a development database.");
+
+  if (target === "production") {
+    if (process.env.NODE_ENV !== "production") {
+      throw new Error("Set NODE_ENV=production when targeting the production database.");
+    }
+    if (process.env.DB_PUSH_CONFIRM_PRODUCTION !== "YES") {
+      throw new Error("Production schema push requires DB_PUSH_CONFIRM_PRODUCTION=YES.");
+    }
+  } else if (process.env.NODE_ENV === "production") {
+    throw new Error("Production mode cannot push to a development target.");
   }
 
   const connectionString = process.env.DATABASE_URL;
@@ -23,7 +32,7 @@ async function pushSchema() {
     await client.query("BEGIN");
     await client.query(schema);
     await client.query("COMMIT");
-    console.log("Development database schema pushed successfully.");
+    console.log(`${target === "production" ? "Production" : "Development"} database schema pushed successfully.`);
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);
     throw error;

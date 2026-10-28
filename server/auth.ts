@@ -40,9 +40,8 @@ export function registerAuthRoutes(app: Express) {
       return;
     }
 
-    const email = process.env["ADMIN_EMAIL"]?.trim().toLowerCase()
-      || process.env["CMS_ADMIN_EMAIL"]?.trim().toLowerCase();
-    const password = process.env["ADMIN_PASSWORD"] || process.env["CMS_ADMIN_PASSWORD"];
+    const email = getAdminEmail();
+    const password = getAdminPassword();
     const jwtSecret = process.env["SESSION_SECRET"];
     if (!email || !password || !jwtSecret) {
       response.status(503).json({ error: "Admin login is not configured yet." });
@@ -103,8 +102,7 @@ export function registerAuthRoutes(app: Express) {
 
 export function getAdminSession(request: Request): AdminClaims | null {
   const secret = process.env["SESSION_SECRET"];
-  const expectedEmail = process.env["ADMIN_EMAIL"]?.trim().toLowerCase()
-    || process.env["CMS_ADMIN_EMAIL"]?.trim().toLowerCase();
+  const expectedEmail = getAdminEmail();
   if (!secret || !expectedEmail) return null;
 
   const token = readCookie(request, cookieName);
@@ -149,6 +147,15 @@ export function getAdminSession(request: Request): AdminClaims | null {
   } catch {
     return null;
   }
+}
+
+function getAdminEmail() {
+  return (process.env["CMS_ADMIN_EMAIL"]?.trim() || process.env["ADMIN_EMAIL"]?.trim())
+    ?.toLowerCase();
+}
+
+function getAdminPassword() {
+  return process.env["CMS_ADMIN_PASSWORD"] || process.env["ADMIN_PASSWORD"];
 }
 
 function signToken(claims: AdminClaims, secret: string) {

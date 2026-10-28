@@ -69,7 +69,7 @@ export function CmsText({
 }: {
   sectionId: string;
   field: string;
-  children: string;
+  children: ReactNode;
 }) {
   const { sections } = useContext(CmsPageContext);
   const section = sections.find((item) => item.id === sectionId);
