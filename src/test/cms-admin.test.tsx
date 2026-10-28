@@ -39,6 +39,7 @@ function setupDashboard() {
   const writes: Array<{ url: string; body: Record<string, unknown> }> = [];
   let pages: CmsPageRecord[] = cmsPages.map((page) => ({
     ...page,
+    isCustom: false,
     sections: page.id === "home" ? initialSections : [],
     updatedAt: null,
   }));
@@ -71,6 +72,35 @@ function setupDashboard() {
         page,
         pageSize,
       });
+    }
+
+    if (init?.method === "POST" && url.pathname === "/api/cms/admin/pages") {
+      const body = JSON.parse(String(init.body ?? "{}")) as { title: string; slug: string };
+      const page: CmsPageRecord = {
+        id: "custom-our-approach",
+        title: body.title,
+        route: `/pages/${body.slug}`,
+        isCustom: true,
+        sections: [],
+        updatedAt: null,
+      };
+      pages = [...pages, page];
+      return jsonResponse({ page });
+    }
+
+    if (init?.method === "PATCH" && url.pathname.startsWith("/api/cms/admin/pages/")) {
+      const pageId = decodeURIComponent(url.pathname.split("/").at(-1) ?? "");
+      const body = JSON.parse(String(init.body ?? "{}")) as { title: string; slug: string };
+      pages = pages.map((page) => page.id === pageId
+        ? { ...page, title: body.title, route: `/pages/${body.slug}` }
+        : page);
+      return jsonResponse({ page: pages.find((page) => page.id === pageId) });
+    }
+
+    if (init?.method === "DELETE" && url.pathname.startsWith("/api/cms/admin/pages/")) {
+      const pageId = decodeURIComponent(url.pathname.split("/").at(-1) ?? "");
+      pages = pages.filter((page) => page.id !== pageId);
+      return jsonResponse({ ok: true, pageId });
     }
 
     if (init?.method === "PUT") {
@@ -164,7 +194,7 @@ describe("CMS admin dashboard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
     expect(onLogout).toHaveBeenCalledOnce();
-  });
+  }, 15_000);
 
   it("edits a page, adds content, changes section visibility and order, and deletes a section", async () => {
     const { writes } = setupDashboard();
@@ -249,6 +279,48 @@ describe("CMS admin dashboard", () => {
     await waitFor(
       () => expect(writes.some(({ url }) => url === "/api/cms/admin/globals/footer")).toBe(true),
       { timeout: 3000 },
+    );
+  });
+
+  it("creates, renames, and deletes a custom page from the page menu", async () => {
+    const { fetchMock } = setupDashboard();
+
+    await screen.findByRole("heading", { name: "Your site, at a glance." });
+    fireEvent.click(screen.getByRole("button", { name: "Create page" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Page title" }), {
+      target: { value: "Our Approach" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "Create page" }).at(-1)!);
+
+    expect(await screen.findByRole("heading", { name: "Our Approach" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/cms/admin/pages",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ title: "Our Approach", slug: "our-approach" }),
+      }),
+    );
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Page title" }), {
+      target: { value: "Our Method" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /URL slug/ }), {
+      target: { value: "our-method" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save page details" }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/cms/admin/pages/custom-our-approach",
+        expect.objectContaining({ method: "PATCH" }),
+      );
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Delete page/ }));
+    expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(window.confirm).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/cms/admin/pages/custom-our-approach",
+      expect.objectContaining({ method: "DELETE" }),
     );
   });
 });

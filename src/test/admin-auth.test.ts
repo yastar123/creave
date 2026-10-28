@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getAdminSession, registerAuthRoutes } from "../../server/auth";
 
 const originalAdminEmail = process.env["CMS_ADMIN_EMAIL"];
+const originalLoginAdminEmail = process.env["ADMIN_EMAIL"];
 const originalSessionSecret = process.env["SESSION_SECRET"];
 const sessionSecret = "test-only-session-secret-with-enough-entropy";
 
@@ -43,12 +44,15 @@ function requestWithCookie(cookie: string): Request {
 describe("CMS admin JWT sessions", () => {
   beforeEach(() => {
     process.env["CMS_ADMIN_EMAIL"] = "admin@example.com";
+    delete process.env["ADMIN_EMAIL"];
     process.env["SESSION_SECRET"] = sessionSecret;
   });
 
   afterEach(() => {
     if (originalAdminEmail === undefined) delete process.env["CMS_ADMIN_EMAIL"];
     else process.env["CMS_ADMIN_EMAIL"] = originalAdminEmail;
+    if (originalLoginAdminEmail === undefined) delete process.env["ADMIN_EMAIL"];
+    else process.env["ADMIN_EMAIL"] = originalLoginAdminEmail;
     if (originalSessionSecret === undefined) delete process.env["SESSION_SECRET"];
     else process.env["SESSION_SECRET"] = originalSessionSecret;
   });
@@ -68,7 +72,10 @@ describe("CMS admin JWT sessions", () => {
 
   it("rejects a token whose signature has been changed", () => {
     const token = makeToken();
-    const altered = `${token.slice(0, -1)}${token.endsWith("a") ? "b" : "a"}`;
+    const [header, payload, signature] = token.split(".");
+    if (!header || !payload || !signature) throw new Error("Test token was malformed.");
+    const changedSignature = `${signature[0] === "a" ? "b" : "a"}${signature.slice(1)}`;
+    const altered = `${header}.${payload}.${changedSignature}`;
     expect(getAdminSession(requestWithCookie(`crevora_admin_session=${altered}`))).toBeNull();
   });
 });
@@ -77,10 +84,13 @@ describe("CMS admin login API", () => {
   let server: Server;
   let origin: string;
   const originalPassword = process.env["CMS_ADMIN_PASSWORD"];
+  const originalLoginPassword = process.env["ADMIN_PASSWORD"];
 
   beforeEach(async () => {
     process.env["CMS_ADMIN_EMAIL"] = "admin@example.com";
     process.env["CMS_ADMIN_PASSWORD"] = "test-only-admin-password";
+    delete process.env["ADMIN_EMAIL"];
+    delete process.env["ADMIN_PASSWORD"];
     process.env["SESSION_SECRET"] = sessionSecret;
     const app = express();
     app.use(express.json());
@@ -98,10 +108,14 @@ describe("CMS admin login API", () => {
     });
     if (originalAdminEmail === undefined) delete process.env["CMS_ADMIN_EMAIL"];
     else process.env["CMS_ADMIN_EMAIL"] = originalAdminEmail;
+    if (originalLoginAdminEmail === undefined) delete process.env["ADMIN_EMAIL"];
+    else process.env["ADMIN_EMAIL"] = originalLoginAdminEmail;
     if (originalSessionSecret === undefined) delete process.env["SESSION_SECRET"];
     else process.env["SESSION_SECRET"] = originalSessionSecret;
     if (originalPassword === undefined) delete process.env["CMS_ADMIN_PASSWORD"];
     else process.env["CMS_ADMIN_PASSWORD"] = originalPassword;
+    if (originalLoginPassword === undefined) delete process.env["ADMIN_PASSWORD"];
+    else process.env["ADMIN_PASSWORD"] = originalLoginPassword;
   });
 
   it("issues an HTTP-only JWT cookie for the right credentials and clears it on logout", async () => {
@@ -133,8 +147,26 @@ describe("CMS admin login API", () => {
     expect(logout.headers.get("set-cookie")).toContain("Expires=Thu, 01 Jan 1970 00:00:00 GMT");
   });
 
+  it("accepts ADMIN_EMAIL and ADMIN_PASSWORD as the preferred configuration", async () => {
+    process.env["ADMIN_EMAIL"] = "admin@example.test";
+    process.env["ADMIN_PASSWORD"] = "test-only-env-admin-password";
+
+    const login = await fetch(`${origin}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "admin@example.test",
+        password: "test-only-env-admin-password",
+      }),
+    });
+
+    expect(login.status).toBe(200);
+    expect(await login.json()).toEqual({ authenticated: true, email: "admin@example.test" });
+  });
+
   it("rejects requests when the administrator credentials are not configured", async () => {
     delete process.env["CMS_ADMIN_EMAIL"];
+    delete process.env["ADMIN_EMAIL"];
     const response = await fetch(`${origin}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

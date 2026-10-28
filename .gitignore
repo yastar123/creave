@@ -31,3 +31,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables and local credentials
+.env
+.env.*
+!.env.example
