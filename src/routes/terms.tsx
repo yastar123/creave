@@ -13,5 +13,5 @@ const sections = [
 
 export const Route = createFileRoute('/terms')({
   head: () => pageHead('Terms of Service', 'The terms that apply when you use the CREVORA website.'),
-  component: () => <LegalPage eyebrow="LEGAL" title="Terms of Service" updated="1 October 2026" sections={sections} />,
+  component: () => <LegalPage pageId="terms" eyebrow="LEGAL" title="Terms of Service" updated="1 October 2026" sections={sections} />,
 });

@@ -12,5 +12,5 @@ const sections = [
 
 export const Route = createFileRoute('/privacy-policy')({
   head: () => pageHead('Privacy Policy', 'How CREVORA collects, uses and protects personal information shared through this website.'),
-  component: () => <LegalPage eyebrow="LEGAL" title="Privacy Policy" updated="26 October 2026" sections={sections} />,
+  component: () => <LegalPage pageId="privacy-policy" eyebrow="LEGAL" title="Privacy Policy" updated="26 October 2026" sections={sections} />,
 });

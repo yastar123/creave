@@ -7,7 +7,8 @@ import { StudioMotion } from '@/components/studio-motion';
 import { StudioFx } from '@/components/studio-fx';
 import { StudioChoreography } from '@/components/studio-choreography';
 import { CmsPageContent, CmsPageSections } from '@/components/cms-sections';
-import { usePublicCmsGlobals } from '@/lib/cms-client';
+import { usePublicCmsGlobals, type CmsGlobals } from '@/lib/cms-client';
+import { CMS_PREVIEW_MESSAGE, isCmsPreviewFrame, isCmsPreviewUpdate } from '@/lib/cms-preview';
 import { useSiteContent } from '@/lib/site-content-context';
 
 export const whatsapp = 'https://wa.me/264815781719?text=Hi%20CREVORA%2C%20I%27d%20love%20to%20talk%20about%20my%20brand.';
@@ -56,9 +57,12 @@ export function StudioShell({ children, darkHeader = false }: { children: ReactN
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
+  const [previewGlobals, setPreviewGlobals] = useState<CmsGlobals | null>(null);
   const closeTimer = useRef<number | undefined>(undefined);
   const location = useLocation();
-  const cmsGlobals = usePublicCmsGlobals().data?.globals;
+  const publicGlobals = usePublicCmsGlobals().data?.globals;
+  const pageId = cmsPageId(location.pathname);
+  const cmsGlobals = previewGlobals ?? publicGlobals;
   const serviceMenu = services.map((service, index) => ({
     index: String(index + 1).padStart(2, '0'),
     title: service.title,
@@ -68,7 +72,6 @@ export function StudioShell({ children, darkHeader = false }: { children: ReactN
   const navItems = parseLinks(cmsGlobals?.navbar["primaryLinks"], nav);
   const headerNote = (cmsGlobals?.navbar["studioNote"] || 'Independent minds.\nIntentional work.').split('\n');
   const footerExtraLinks = parseLinks(cmsGlobals?.footer["links"], []);
-  const pageId = cmsPageId(location.pathname);
   const socialLinks = lines(cmsGlobals?.footer["socialLinks"]).map(line => {
     const [name, url] = line.split('|').map(part => part?.trim());
     return name && url && /^https?:\/\//i.test(url) ? { name, url } : null;
@@ -77,6 +80,17 @@ export function StudioShell({ children, darkHeader = false }: { children: ReactN
   const closeServices = () => { window.clearTimeout(closeTimer.current); closeTimer.current = window.setTimeout(() => setServicesOpen(false), 140); };
   useEffect(() => () => window.clearTimeout(closeTimer.current), []);
   useEffect(() => { setServicesOpen(false); }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isCmsPreviewFrame()) return;
+    const onMessage = (event: MessageEvent<unknown>) => {
+      if (event.origin !== window.location.origin || event.source !== window.parent) return;
+      if (!isCmsPreviewUpdate(event.data) || event.data.pageId !== pageId || !event.data.globals) return;
+      setPreviewGlobals(event.data.globals);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [pageId]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);

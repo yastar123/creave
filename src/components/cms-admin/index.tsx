@@ -14,6 +14,10 @@ import {
   LayoutDashboard,
   LoaderCircle,
   LogOut,
+  Maximize2,
+  Minimize2,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plus,
   RotateCcw,
   Save,
@@ -21,11 +25,11 @@ import {
   X,
 } from "lucide-react";
 
-import { CmsSectionPreview } from "@/components/cms-sections";
 import {
   useAdminCmsGlobals,
   useAdminCmsPages,
   useAdminInquiries,
+  useAdminSiteContent,
   useCreateCmsPage,
   useDeleteCmsPage,
   useSaveCmsGlobal,
@@ -34,6 +38,7 @@ import {
 } from "@/lib/cms-client";
 import { cmsPages, cmsSectionTypes } from "@/lib/cms-shared";
 import type { CmsSection, CmsSectionType } from "@/lib/cms-shared";
+import { CMS_PREVIEW_MESSAGE, CMS_PREVIEW_PARAM, CMS_PREVIEW_READY } from "@/lib/cms-preview";
 import { CmsInbox } from "./inbox";
 import { CmsOverview } from "./overview";
 import { CmsCollections } from "./collections";
@@ -88,6 +93,7 @@ function FieldRows({
   onDelete,
   onAdd,
   noun = "field",
+  allowStructure = true,
 }: {
   entries: Record<string, string>;
   onRename: (oldKey: string, newKey: string) => void;
@@ -95,6 +101,7 @@ function FieldRows({
   onDelete: (key: string) => void;
   onAdd: (key: string, value: string) => void;
   noun?: string;
+  allowStructure?: boolean;
 }) {
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
@@ -125,16 +132,20 @@ function FieldRows({
       {keys.map((key) => (
         <div className="ca-field-row" key={key}>
           <label className="ca-field-key">
-            <span>Field name</span>
-            <input
-              aria-label={`${noun} name`}
-              value={key}
-              onChange={(event) => {
-                const next = event.target.value;
-                if (!next.trim() || (next !== key && Object.prototype.hasOwnProperty.call(entries, next))) return;
-                onRename(key, next);
-              }}
-            />
+            {allowStructure ? (
+              <>
+                <span>Field name</span>
+                <input
+                  aria-label={`${noun} name`}
+                  value={key}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    if (!next.trim() || (next !== key && Object.prototype.hasOwnProperty.call(entries, next))) return;
+                    onRename(key, next);
+                  }}
+                />
+              </>
+            ) : <span className="ca-field-key-label">{prettyKey(key)}</span>}
           </label>
           <label className="ca-field-value">
             <span>Value <em>Use a new line for each link or item</em></span>
@@ -145,7 +156,7 @@ function FieldRows({
               onChange={(event) => onChange(key, event.target.value)}
             />
           </label>
-          <button
+          {allowStructure && <button
             aria-label={`Delete ${key}`}
             className="ca-icon-button ca-remove-field"
             onClick={() => onDelete(key)}
@@ -153,10 +164,10 @@ function FieldRows({
             type="button"
           >
             <Trash2 size={15} />
-          </button>
+          </button>}
         </div>
       ))}
-      <div className="ca-add-field">
+      {allowStructure && <div className="ca-add-field">
         <label>
           <span>New field name</span>
           <input
@@ -191,39 +202,7 @@ function FieldRows({
           <Plus size={15} /> Add field
         </button>
         {addError && <span className="ca-inline-error">{addError}</span>}
-      </div>
-    </div>
-  );
-}
-
-function GlobalPreview({ kind, content }: { kind: GlobalKey; content: Record<string, string> }) {
-  const entries = Object.entries(content);
-  return (
-    <div className={`ca-global-preview ca-global-preview-${kind}`}>
-      <div className="ca-browser-bar">
-        <span /><span /><span />
-        <div className="ca-browser-address">crevora.com.na / {kind}</div>
-      </div>
-      {kind === "navbar" ? (
-        <div className="ca-nav-mock">
-          <strong>CREVORA</strong>
-          <div>
-            {entries.length ? entries.slice(0, 5).map(([key, value]) => (
-              <span key={key}>{value.split("\n").filter(Boolean)[0] || prettyKey(key)}</span>
-            )) : <span>Your navigation links will appear here</span>}
-          </div>
-          <i />
-        </div>
-      ) : (
-        <div className="ca-footer-mock">
-          <div className="ca-footer-brand">CREVORA<span>Independent creative studio · Namibia</span></div>
-          <div className="ca-footer-content">
-            {entries.length ? entries.slice(0, 4).map(([key, value]) => (
-              <div key={key}><small>{prettyKey(key)}</small><p>{value || "—"}</p></div>
-            )) : <p>Your shared footer content will appear here</p>}
-          </div>
-        </div>
-      )}
+      </div>}
     </div>
   );
 }
@@ -251,6 +230,16 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
 
   const [activeView, setActiveView] = useState<AdminView>("overview");
   const [selection, setSelection] = useState<Selection>({ kind: "page", id: "home" });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return typeof window !== "undefined" && window.localStorage.getItem("crevora-cms-sidebar-collapsed") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [previewFrameReady, setPreviewFrameReady] = useState(false);
+  const [previewExpanded, setPreviewExpanded] = useState(false);
   const [sections, setSections] = useState<CmsSection[]>([]);
   const [globalContent, setGlobalContent] = useState<Record<string, string>>({});
   const [pageStatus, setPageStatus] = useState<SaveState>("idle");
@@ -265,6 +254,10 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
   const [pageManagementError, setPageManagementError] = useState("");
   const [sectionError, setSectionError] = useState("");
   const [mutationError, setMutationError] = useState("");
+  const previewFrameRef = useRef<HTMLIFrameElement>(null);
+  const dynamicCollectionsQuery = useAdminSiteContent(
+    selection.kind === "page" && (selection.id === "case-studies" || selection.id === "journal-articles"),
+  );
   const selectionRef = useRef(selection);
   selectionRef.current = selection;
   const pageSaved = useRef<Record<string, string>>({});
@@ -287,6 +280,70 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
     : undefined;
   const globalKey = selection.kind === "global" ? selection.id : null;
   const globalTitle = globalKey === "navbar" ? "Navigation" : "Footer";
+  const projectPreviewSlug = dynamicCollectionsQuery.data?.content.projects[0]?.slug;
+  const articlePreviewSlug = dynamicCollectionsQuery.data?.content.articles[0]?.slug;
+  const previewPageId = selection.kind === "global"
+    ? "home"
+    : selection.id === "case-studies"
+      ? (projectPreviewSlug ? "case-studies" : "work")
+      : selection.id === "journal-articles"
+        ? (articlePreviewSlug ? "journal-articles" : "journal")
+        : selection.id;
+  const previewRoute = useMemo(() => {
+    if (selection.kind === "global") return "/";
+    if (selection.id === "case-studies") {
+      return projectPreviewSlug ? `/work/${encodeURIComponent(projectPreviewSlug)}` : "/work";
+    }
+    if (selection.id === "journal-articles") {
+      return articlePreviewSlug ? `/journal/${encodeURIComponent(articlePreviewSlug)}` : "/journal";
+    }
+    const route = pageMeta?.route ?? "/";
+    return route.startsWith("/") && !route.startsWith("//") ? route : "/";
+  }, [selection, pageMeta?.route, projectPreviewSlug, articlePreviewSlug]);
+  const previewSrc = `${previewRoute}${previewRoute.includes("?") ? "&" : "?"}${CMS_PREVIEW_PARAM}=1`;
+  const previewGlobals = useMemo(() => {
+    const current = globalsQuery.data?.globals ?? { navbar: {}, footer: {} };
+    return selection.kind === "global" ? { ...current, [selection.id]: globalContent } : current;
+  }, [globalsQuery.data?.globals, selection, globalContent]);
+  const previewSections = selection.kind === "page" && selection.id === previewPageId ? sections : undefined;
+  const collectionDrivenPage = currentPage?.id === "case-studies" || currentPage?.id === "journal-articles";
+  const mobileLayout = typeof window !== "undefined" && window.matchMedia("(max-width: 850px)").matches;
+  const sidebarToggleExpanded = mobileLayout ? mobileSidebarOpen : !sidebarCollapsed;
+  const sidebarToggleLabel = mobileLayout
+    ? (mobileSidebarOpen ? "Close sidebar menu" : "Open sidebar menu")
+    : (sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar");
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("crevora-cms-sidebar-collapsed", sidebarCollapsed ? "1" : "0");
+    } catch {
+      // The sidebar remains usable when browser storage is unavailable.
+    }
+  }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    setPreviewFrameReady(false);
+  }, [previewSrc]);
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent<unknown>) => {
+      if (event.origin !== window.location.origin || event.source !== previewFrameRef.current?.contentWindow) return;
+      if (!event.data || typeof event.data !== "object" || !("type" in event.data) || !("pageId" in event.data)) return;
+      if (event.data.type === CMS_PREVIEW_READY && event.data.pageId === previewPageId) setPreviewFrameReady(true);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [previewPageId]);
+
+  useEffect(() => {
+    if (!previewFrameReady) return;
+    previewFrameRef.current?.contentWindow?.postMessage({
+      type: CMS_PREVIEW_MESSAGE,
+      pageId: previewPageId,
+      sections: previewSections,
+      globals: previewGlobals,
+    }, window.location.origin);
+  }, [previewFrameReady, previewPageId, previewSections, previewGlobals]);
 
   const pageGroups = useMemo(() => [
     { title: "Core", ids: ["home", "about", "services", "contact"] },
@@ -565,11 +622,13 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
   }
 
   return (
-    <main className="ca-shell">
+    <main className={`ca-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "is-mobile-sidebar-open" : ""}`}>
       <aside className="ca-sidebar">
         <div className="ca-brand">
-          <div className="ca-brand-mark">C</div>
-          <div><strong>CREVORA</strong><span>STUDIO CMS</span></div>
+          <div className="ca-brand-identity">
+            <img className="ca-brand-logo" src="/crevora-logo.png" alt="CREVORA" />
+            <span>STUDIO CMS</span>
+          </div>
         </div>
         <div className="ca-workspace-nav">
           <div className="ca-sidebar-label">WORKSPACE</div>
@@ -577,6 +636,7 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
             aria-current={activeView === "overview" ? "page" : undefined}
             className={`ca-nav-item ${activeView === "overview" ? "is-active" : ""}`}
             onClick={() => openView("overview")}
+            title="Overview"
             type="button"
           >
             <LayoutDashboard size={15} className="ca-nav-icon" />
@@ -586,6 +646,7 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
             aria-current={activeView === "inquiries" ? "page" : undefined}
             className={`ca-nav-item ${activeView === "inquiries" ? "is-active" : ""}`}
             onClick={() => openView("inquiries")}
+            title="Inbox"
             type="button"
           >
             <Inbox size={15} className="ca-nav-icon" />
@@ -596,6 +657,7 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
             aria-current={activeView === "collections" ? "page" : undefined}
             className={`ca-nav-item ${activeView === "collections" ? "is-active" : ""}`}
             onClick={() => openView("collections")}
+            title="Data collections"
             type="button"
           >
             <Database size={15} className="ca-nav-icon" />
@@ -627,6 +689,7 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
                 return (
                   <button
                     aria-current={activeView === "pages" && selection.kind === "page" && selection.id === id ? "page" : undefined}
+                    aria-label={page.title}
                     className={`ca-nav-item ${activeView === "pages" && selection.kind === "page" && selection.id === id ? "is-active" : ""}`}
                     disabled={!exists}
                     key={id}
@@ -634,9 +697,10 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
                       setActiveView("pages");
                       choose({ kind: "page", id });
                     }}
+                    title={page.title}
                     type="button"
                   >
-                    <span className="ca-nav-bullet" />
+                    <FileText size={14} className="ca-nav-icon" />
                     <span>{page.title}</span>
                     <span className="ca-nav-route">{page.route}</span>
                   </button>
@@ -650,15 +714,17 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
               {pageRecords.filter((page) => page.isCustom).map((page) => (
                 <button
                   aria-current={activeView === "pages" && selection.kind === "page" && selection.id === page.id ? "page" : undefined}
+                  aria-label={page.title}
                   className={`ca-nav-item ${activeView === "pages" && selection.kind === "page" && selection.id === page.id ? "is-active" : ""}`}
                   key={page.id}
                   onClick={() => {
                     setActiveView("pages");
                     choose({ kind: "page", id: page.id });
                   }}
+                  title={page.title}
                   type="button"
                 >
-                  <span className="ca-nav-bullet" />
+                  <FileText size={14} className="ca-nav-icon" />
                   <span>{page.title}</span>
                   <span className="ca-nav-route">{page.route}</span>
                 </button>
@@ -713,9 +779,10 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
                 setActiveView("pages");
                 choose({ kind: "global", id: key });
               }}
+              title={key === "navbar" ? "Navigation" : "Footer"}
               type="button"
             >
-              <span className="ca-nav-bullet" />
+              <Layers3 size={14} className="ca-nav-icon" />
               <span>{key === "navbar" ? "Navigation" : "Footer"}</span>
               <span className="ca-nav-shared-mark">GLOBAL</span>
             </button>
@@ -728,10 +795,28 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
 
       <section className="ca-workspace">
         <header className="ca-topbar">
-          <div className="ca-breadcrumb">
-            <span>{activeView === "overview" ? "WORKSPACE" : activeView === "inquiries" ? "INBOX" : activeView === "collections" ? "DATA" : "CONTENT"}</span>
-            <i>/</i>
-            <strong>{activeView === "overview" ? "Overview" : activeView === "inquiries" ? "Contact requests" : activeView === "collections" ? "Content collections" : selection.kind === "page" ? pageMeta?.title : globalTitle}</strong>
+          <div className="ca-topbar-left">
+            <div className="ca-breadcrumb">
+              <span>{activeView === "overview" ? "WORKSPACE" : activeView === "inquiries" ? "INBOX" : activeView === "collections" ? "DATA" : "CONTENT"}</span>
+              <i>/</i>
+              <strong>{activeView === "overview" ? "Overview" : activeView === "inquiries" ? "Contact requests" : activeView === "collections" ? "Content collections" : selection.kind === "page" ? pageMeta?.title : globalTitle}</strong>
+            </div>
+            <button
+              aria-label={sidebarToggleLabel}
+              aria-expanded={sidebarToggleExpanded}
+              className="ca-sidebar-toggle"
+              onClick={() => {
+                if (window.matchMedia("(max-width: 850px)").matches) {
+                  setMobileSidebarOpen((open) => !open);
+                } else {
+                  setSidebarCollapsed((collapsed) => !collapsed);
+                }
+              }}
+              title={sidebarToggleLabel}
+              type="button"
+            >
+              {sidebarToggleExpanded ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+            </button>
           </div>
           {activeView === "pages" && (
             <>
@@ -798,7 +883,7 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
         ) : activeView === "collections" ? (
           <CmsCollections />
         ) : (
-        <div className="ca-content-layout">
+        <div className={`ca-content-layout ${previewExpanded ? "is-preview-expanded" : ""}`}>
           <div className="ca-editor-column">
             <div className="ca-page-heading">
               <div>
@@ -843,94 +928,109 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
                     </button>
                   </form>
                 )}
-                <div className="ca-section-toolbar">
-                  <div><span className="ca-overline">PAGE STRUCTURE</span><span className="ca-count">{sections.length.toString().padStart(2, "0")}</span></div>
-                  <div className="ca-add-section-control">
-                    <label className="ca-visually-hidden" htmlFor="ca-section-type">Section type</label>
-                    <select id="ca-section-type" onChange={(event) => setNewSectionType(event.target.value as CmsSectionType)} value={newSectionType}>
-                      {cmsSectionTypes.map((type) => <option key={type} value={type}>{sectionLabels[type]}</option>)}
-                    </select>
-                    <button className="ca-button ca-button-dark" onClick={addSection} type="button"><Plus size={16} /> Add section</button>
-                  </div>
-                </div>
-
-                {sectionError && <div className="ca-inline-error">{sectionError}</div>}
-
-                {sections.length === 0 ? (
-                  <div className="ca-empty-sections">
-                    <div><Layers3 size={22} /></div>
-                    <h2>A clean start.</h2>
-                    <p>This page has no sections yet. Add one to begin building its content.</p>
-                    <button className="ca-button ca-button-dark" onClick={addSection} type="button"><Plus size={15} /> Add first section</button>
+                {collectionDrivenPage ? (
+                  <div className="ca-collection-editor-note">
+                    <div><Database size={19} /></div>
+                    <span className="ca-overline">CONTENT RECORDS</span>
+                    <h2>Keep the public page layout intact.</h2>
+                    <p>Project and article pages use their live collection records, including their text and images. Edit those records in Data collections.</p>
+                    <button className="ca-button ca-button-dark" onClick={() => openView("collections")} type="button">
+                      <Database size={14} /> Open data collections
+                    </button>
                   </div>
                 ) : (
-                  <div className="ca-section-list">
-                    {sections.map((section, index) => {
-                      const expanded = activeSectionId === section.id;
-                      return (
-                        <article className={`ca-section-card ${expanded ? "is-expanded" : ""} ${!section.enabled ? "is-disabled" : ""}`} key={section.id}>
-                          <div className="ca-section-head">
-                            <div className="ca-order-grip" aria-label={`Section ${index + 1}`}><GripVertical size={16} /><span>{String(index + 1).padStart(2, "0")}</span></div>
-                            <button className="ca-section-toggle" onClick={() => setActiveSectionId(expanded ? null : section.id)} type="button" aria-expanded={expanded}>
-                              <div className="ca-section-title-wrap">
-                                <strong>{section.title || sectionLabels[section.type]}</strong>
-                                <span>{sectionLabels[section.type]} <i>·</i> {Object.keys(section.fields).length} {Object.keys(section.fields).length === 1 ? "field" : "fields"}</span>
+                  <>
+                    <div className="ca-section-toolbar">
+                      <div><span className="ca-overline">{currentPage?.isCustom ? "PAGE STRUCTURE" : "PAGE CONTENT"}</span><span className="ca-count">{sections.length.toString().padStart(2, "0")}</span></div>
+                      {currentPage?.isCustom && <div className="ca-add-section-control">
+                        <label className="ca-visually-hidden" htmlFor="ca-section-type">Section type</label>
+                        <select id="ca-section-type" onChange={(event) => setNewSectionType(event.target.value as CmsSectionType)} value={newSectionType}>
+                          {cmsSectionTypes.map((type) => <option key={type} value={type}>{sectionLabels[type]}</option>)}
+                        </select>
+                        <button className="ca-button ca-button-dark" onClick={addSection} type="button"><Plus size={16} /> Add section</button>
+                      </div>}
+                    </div>
+
+                    {sectionError && <div className="ca-inline-error">{sectionError}</div>}
+
+                    {sections.length === 0 ? (
+                      <div className="ca-empty-sections">
+                        <div><Layers3 size={22} /></div>
+                        <h2>{currentPage?.isCustom ? "A clean start." : "No page content found."}</h2>
+                        <p>{currentPage?.isCustom ? "This page has no sections yet. Add one to begin building its content." : "The page content could not be loaded."}</p>
+                        {currentPage?.isCustom && <button className="ca-button ca-button-dark" onClick={addSection} type="button"><Plus size={15} /> Add first section</button>}
+                      </div>
+                    ) : (
+                      <div className="ca-section-list">
+                        {sections.map((section, index) => {
+                          const expanded = activeSectionId === section.id;
+                          return (
+                            <article className={`ca-section-card ${expanded ? "is-expanded" : ""} ${!section.enabled ? "is-disabled" : ""}`} key={section.id}>
+                              <div className="ca-section-head">
+                                {currentPage?.isCustom && <div className="ca-order-grip" aria-label={`Section ${index + 1}`}><GripVertical size={16} /><span>{String(index + 1).padStart(2, "0")}</span></div>}
+                                <button className="ca-section-toggle" onClick={() => setActiveSectionId(expanded ? null : section.id)} type="button" aria-expanded={expanded}>
+                                  <div className="ca-section-title-wrap">
+                                    <strong>{section.title || sectionLabels[section.type]}</strong>
+                                    <span>{sectionLabels[section.type]} <i>·</i> {Object.keys(section.fields).length} {Object.keys(section.fields).length === 1 ? "field" : "fields"}</span>
+                                  </div>
+                                  <ChevronDown size={17} className="ca-chevron" />
+                                </button>
+                                {currentPage?.isCustom && <div className="ca-section-actions">
+                                  <button className="ca-icon-button" disabled={index === 0} onClick={() => moveSection(index, -1)} title="Move section up" type="button"><ArrowUp size={15} /></button>
+                                  <button className="ca-icon-button" disabled={index === sections.length - 1} onClick={() => moveSection(index, 1)} title="Move section down" type="button"><ArrowDown size={15} /></button>
+                                  <button
+                                    className={`ca-switch ${section.enabled ? "is-on" : ""}`}
+                                    aria-label={section.enabled ? "Disable section" : "Enable section"}
+                                    aria-pressed={section.enabled}
+                                    onClick={() => updateSection(section.id, (item) => ({ ...item, enabled: !item.enabled }))}
+                                    title={section.enabled ? "Section is enabled" : "Section is disabled"}
+                                    type="button"
+                                  ><span /></button>
+                                  <button className="ca-icon-button ca-delete-button" onClick={() => deleteSection(section.id)} title="Delete section" type="button"><Trash2 size={15} /></button>
+                                </div>}
                               </div>
-                              <ChevronDown size={17} className="ca-chevron" />
-                            </button>
-                            <div className="ca-section-actions">
-                              <button className="ca-icon-button" disabled={index === 0} onClick={() => moveSection(index, -1)} title="Move section up" type="button"><ArrowUp size={15} /></button>
-                              <button className="ca-icon-button" disabled={index === sections.length - 1} onClick={() => moveSection(index, 1)} title="Move section down" type="button"><ArrowDown size={15} /></button>
-                              <button
-                                className={`ca-switch ${section.enabled ? "is-on" : ""}`}
-                                aria-label={section.enabled ? "Disable section" : "Enable section"}
-                                aria-pressed={section.enabled}
-                                onClick={() => updateSection(section.id, (item) => ({ ...item, enabled: !item.enabled }))}
-                                title={section.enabled ? "Section is enabled" : "Section is disabled"}
-                                type="button"
-                              ><span /></button>
-                              <button className="ca-icon-button ca-delete-button" onClick={() => deleteSection(section.id)} title="Delete section" type="button"><Trash2 size={15} /></button>
-                            </div>
-                          </div>
-                          {expanded && (
-                            <div className="ca-section-body">
-                              <div className="ca-section-settings">
-                                <label className="ca-title-control">
-                                  <span>Section title</span>
-                                  <input value={section.title} onChange={(event) => updateSection(section.id, (item) => ({ ...item, title: event.target.value }))} />
-                                </label>
-                                <label className="ca-title-control ca-type-control">
-                                  <span>Layout</span>
-                                  <select value={section.type} onChange={(event) => updateSection(section.id, (item) => ({ ...item, type: event.target.value as CmsSectionType }))}>
-                                    {cmsSectionTypes.map((type) => <option key={type} value={type}>{sectionLabels[type]}</option>)}
-                                  </select>
-                                </label>
-                              </div>
-                              <div className="ca-fields-heading"><span>CONTENT FIELDS</span><span>Visible on the public page</span></div>
-                              <FieldRows
-                                entries={section.fields}
-                                onRename={(oldKey, newKey) => updateSection(section.id, (item) => {
-                                  const fields = { ...item.fields };
-                                  const value = fields[oldKey] ?? "";
-                                  delete fields[oldKey];
-                                  fields[newKey] = value;
-                                  return { ...item, fields };
-                                })}
-                                onChange={(key, value) => updateSection(section.id, (item) => ({ ...item, fields: { ...item.fields, [key]: value } }))}
-                                onDelete={(key) => updateSection(section.id, (item) => {
-                                  const fields = { ...item.fields };
-                                  delete fields[key];
-                                  return { ...item, fields };
-                                })}
-                                onAdd={(key, value) => updateSection(section.id, (item) => ({ ...item, fields: { ...item.fields, [key]: value } }))}
-                                noun="section field"
-                              />
-                            </div>
-                          )}
-                        </article>
-                      );
-                    })}
-                  </div>
+                              {expanded && (
+                                <div className="ca-section-body">
+                                  {currentPage?.isCustom && <div className="ca-section-settings">
+                                    <label className="ca-title-control">
+                                      <span>Section title</span>
+                                      <input value={section.title} onChange={(event) => updateSection(section.id, (item) => ({ ...item, title: event.target.value }))} />
+                                    </label>
+                                    <label className="ca-title-control ca-type-control">
+                                      <span>Layout</span>
+                                      <select value={section.type} onChange={(event) => updateSection(section.id, (item) => ({ ...item, type: event.target.value as CmsSectionType }))}>
+                                        {cmsSectionTypes.map((type) => <option key={type} value={type}>{sectionLabels[type]}</option>)}
+                                      </select>
+                                    </label>
+                                  </div>}
+                                  <div className="ca-fields-heading"><span>CONTENT FIELDS</span><span>Visible on the public page</span></div>
+                                  <FieldRows
+                                    entries={section.fields}
+                                    onRename={(oldKey, newKey) => updateSection(section.id, (item) => {
+                                      const fields = { ...item.fields };
+                                      const value = fields[oldKey] ?? "";
+                                      delete fields[oldKey];
+                                      fields[newKey] = value;
+                                      return { ...item, fields };
+                                    })}
+                                    onChange={(key, value) => updateSection(section.id, (item) => ({ ...item, fields: { ...item.fields, [key]: value } }))}
+                                    onDelete={(key) => updateSection(section.id, (item) => {
+                                      const fields = { ...item.fields };
+                                      delete fields[key];
+                                      return { ...item, fields };
+                                    })}
+                                    onAdd={(key, value) => updateSection(section.id, (item) => ({ ...item, fields: { ...item.fields, [key]: value } }))}
+                                    noun="section field"
+                                    allowStructure={Boolean(currentPage?.isCustom)}
+                                  />
+                                </div>
+                              )}
+                            </article>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             ) : (
@@ -973,33 +1073,35 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
           <aside className="ca-preview-column">
             <div className="ca-preview-heading">
               <div><Eye size={16} /><span>LIVE PREVIEW</span></div>
-              <span className="ca-preview-label">UPDATING AS YOU EDIT</span>
+              <div className="ca-preview-heading-actions">
+                <span className="ca-preview-label">{previewFrameReady ? "DRAFT CONNECTED" : "LOADING PUBLIC PAGE"}</span>
+                <button
+                  aria-label={previewExpanded ? "Return to editor" : "Expand public preview"}
+                  className="ca-preview-expand"
+                  onClick={() => setPreviewExpanded((expanded) => !expanded)}
+                  title={previewExpanded ? "Return to editor" : "Expand public preview"}
+                  type="button"
+                >
+                  {previewExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+                </button>
+              </div>
             </div>
             <div className="ca-preview-frame">
               <div className="ca-preview-device">
-                <div className="ca-preview-browser"><span /><span /><span /><i>{selection.kind === "page" ? pageMeta?.route : `Site ${globalKey}`}</i></div>
-                {selection.kind === "page" ? (
-                  <div className="ca-preview-page">
-                    {sections.filter((section) => section.enabled).length ? sections.filter((section) => section.enabled).map((section) => (
-                      <div className="ca-preview-section" key={section.id}>
-                        <CmsSectionPreview section={section} />
-                      </div>
-                    )) : (
-                      <div className="ca-preview-empty">
-                        <span>PREVIEW</span>
-                        <strong>Nothing on the page yet.</strong>
-                        <p>Add a section to see your page take shape.</p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <GlobalPreview kind={selection.id} content={globalContent} />
-                )}
+                <div className="ca-preview-browser"><span /><span /><span /><i>{previewRoute}</i></div>
+                <iframe
+                  key={previewSrc}
+                  ref={previewFrameRef}
+                  className="ca-public-preview-frame"
+                  src={previewSrc}
+                  title={`Public site preview for ${selection.kind === "page" ? pageMeta?.title ?? "this page" : globalTitle}`}
+                  loading="eager"
+                />
               </div>
             </div>
             <div className="ca-preview-note">
               <div className="ca-note-mark"><Eye size={15} /></div>
-              <p><strong>What you see is a guide.</strong> The published page may look slightly different across screen sizes.</p>
+              <p><strong>This is the public page.</strong> It uses the same layout, typography, and image assets as the live site, with your current draft content applied.</p>
             </div>
             {selection.kind === "page" && currentPage?.updatedAt && (
               <div className="ca-last-updated">

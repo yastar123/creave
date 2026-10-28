@@ -72,11 +72,12 @@ export function useAdminCmsGlobals() {
   });
 }
 
-export function useAdminSiteContent() {
+export function useAdminSiteContent(enabled = true) {
   return useQuery({
     queryKey: ["cms", "admin", "collections"],
     queryFn: () => requestJson<{ content: CmsSiteContent }>("/api/cms/admin/collections"),
     retry: false,
+    enabled,
   });
 }
 

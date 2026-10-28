@@ -1,9 +1,10 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { ArrowUpRight } from "lucide-react";
 
 import { usePublicCmsPage } from "@/lib/cms-client";
 import { cmsPageDefaultSections } from "@/lib/cms-page-defaults";
 import type { CmsSection } from "@/lib/cms-shared";
+import { CMS_PREVIEW_READY, isCmsPreviewFrame, isCmsPreviewUpdate } from "@/lib/cms-preview";
 
 type CmsPageContextValue = {
   pageId: string;
@@ -19,8 +20,37 @@ const CmsPageContext = createContext<CmsPageContextValue>({
 
 export function CmsPageContent({ pageId, children }: { pageId: string; children: ReactNode }) {
   const query = usePublicCmsPage(pageId);
+  const [previewSections, setPreviewSections] = useState<CmsSection[] | null>(null);
+  const previewFrame = isCmsPreviewFrame();
   const defaults = cmsPageDefaultSections[pageId] ?? [];
-  const sections = query.data?.sections ?? defaults;
+  const source = previewSections ?? query.data?.sections ?? defaults;
+  const sections = defaults.length
+    ? defaults.map((section) => {
+      const content = source.find((item) => item.id === section.id);
+      return { ...section, fields: { ...section.fields, ...(content?.fields ?? {}) } };
+    })
+    : source;
+
+  useEffect(() => {
+    if (!previewFrame) return;
+    const announceReady = () => {
+      window.parent.postMessage({ type: CMS_PREVIEW_READY, pageId }, window.location.origin);
+    };
+    const onMessage = (event: MessageEvent<unknown>) => {
+      if (event.origin !== window.location.origin || event.source !== window.parent) return;
+      if (!isCmsPreviewUpdate(event.data) || event.data.pageId !== pageId) return;
+      if (event.data.sections) setPreviewSections(event.data.sections);
+      window.clearInterval(readyInterval);
+    };
+    const readyInterval = window.setInterval(announceReady, 500);
+    window.addEventListener("message", onMessage);
+    announceReady();
+    return () => {
+      window.clearInterval(readyInterval);
+      window.removeEventListener("message", onMessage);
+    };
+  }, [pageId, previewFrame]);
+
   return (
     <CmsPageContext.Provider value={{ pageId, sections, loaded: query.isSuccess || query.isError }}>
       {children}
@@ -149,7 +179,9 @@ export function CmsSectionPreview({ section }: { section: CmsSection }) {
 export function CmsPageSections({ pageId }: { pageId: string }) {
   const { pageId: currentPageId, sections } = useContext(CmsPageContext);
   if (!pageId || currentPageId !== pageId || !sections.length) return null;
-  const seededIds = new Set((cmsPageDefaultSections[pageId] ?? []).map((section) => section.id));
+  const defaults = cmsPageDefaultSections[pageId] ?? [];
+  if (defaults.length) return null;
+  const seededIds = new Set(defaults.map((section) => section.id));
   const additional = sections.filter((section) => !seededIds.has(section.id));
   if (!additional.length) return null;
 

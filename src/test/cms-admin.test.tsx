@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CmsDashboard } from "@/components/cms-admin";
@@ -196,12 +196,13 @@ describe("CMS admin dashboard", () => {
     expect(onLogout).toHaveBeenCalledOnce();
   }, 15_000);
 
-  it("edits a page, adds content, changes section visibility and order, and deletes a section", async () => {
+  it("edits built-in page copy without exposing layout or field structure controls", async () => {
     const { writes } = setupDashboard();
 
     await screen.findByRole("heading", { name: "Your site, at a glance." });
     fireEvent.click(screen.getByRole("button", { name: /^Home/ }));
     expect(await screen.findByRole("heading", { name: "Home" })).toBeInTheDocument();
+    expect(screen.getByTitle("Public site preview for Home")).toHaveAttribute("src", "/?__cms_preview=1");
     fireEvent.change(screen.getByRole("textbox", { name: "heading value" }), {
       target: { value: "A new home page heading" },
     });
@@ -216,36 +217,9 @@ describe("CMS admin dashboard", () => {
         ).toBe(true),
       { timeout: 3000 },
     );
-
-    fireEvent.click(screen.getByRole("button", { name: /Add section/ }));
-    expect(await screen.findByRole("button", { name: /^Text/ })).toBeInTheDocument();
-    fireEvent.change(screen.getByRole("textbox", { name: "Section title" }), {
-      target: { value: "New feature" },
-    });
-    fireEvent.change(screen.getByRole("textbox", { name: "New field name" }), {
-      target: { value: "eyebrow" },
-    });
-    fireEvent.change(screen.getByRole("textbox", { name: "Starting value" }), {
-      target: { value: "Made with care" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Add field" }));
-    expect(await screen.findByRole("textbox", { name: "eyebrow value" })).toHaveValue(
-      "Made with care",
-    );
-
-    const newSection = screen
-      .getByRole("button", { name: /^New feature/ })
-      .closest(".ca-section-card") as HTMLElement | null;
-    if (!newSection) throw new Error("The new CMS section card was not rendered.");
-    fireEvent.click(within(newSection!).getByRole("button", { name: "Disable section" }));
-    expect(within(newSection!).getByRole("button", { name: "Enable section" })).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
-    fireEvent.click(within(newSection!).getByRole("button", { name: "Move section up" }));
-    fireEvent.click(within(newSection!).getByRole("button", { name: "Delete section" }));
-    expect(await screen.findByRole("button", { name: /^Introduction/ })).toBeInTheDocument();
-    expect(window.confirm).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("button", { name: /Add section/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "New field name" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Move section/ })).not.toBeInTheDocument();
     expect(writes.some(({ url }) => url === "/api/cms/admin/pages/home")).toBe(true);
   });
 
