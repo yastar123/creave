@@ -648,6 +648,7 @@ h1,h2,h3 { letter-spacing: -0.035em; }
 .fx-loader { position: fixed; inset: 0; z-index: 200; background: var(--studio-ink); color: var(--studio-white); display: flex; flex-direction: column; justify-content: space-between; padding: 28px var(--gutter); transition: clip-path 1s var(--ease-io); clip-path: inset(0 0 0 0); }
 .fx-loader.is-exit { clip-path: inset(0 0 100% 0); }
 .fx-loader-top { display: flex; justify-content: space-between; font: 10px var(--font-detail); color: var(--studio-muted); }
+.fx-loader-brand { display: block; width: 80px; height: auto; }
 .fx-loader-word { font: 400 clamp(54px, 10vw, 170px)/.9 var(--font-display); letter-spacing: -0.055em; overflow: hidden; }
 .fx-loader-word > * { display: inline-block; animation: type-enter 1s var(--ease-out) both; }
 .fx-loader-word em { font-family: var(--font-serif); color: var(--studio-signal); animation-delay: .12s; }

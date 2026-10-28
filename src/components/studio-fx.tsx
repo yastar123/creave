@@ -94,7 +94,7 @@ export function StudioFx({ pathname }: { pathname: string }) {
   return <>
     <div className="fx-grain" aria-hidden="true" /><div className="fx-dot" aria-hidden="true"><span /></div>
     <div className={`fx-loader ${phase === 'exit' ? 'is-exit' : ''}`} aria-hidden="true">
-      <div className="fx-loader-top"><span>CREVORA®</span><span>Independent creative studio</span><span>Windhoek — NA</span></div>
+      <div className="fx-loader-top"><img className="fx-loader-brand" src="/crevora-logo.png" alt="" width={700} height={115} /><span>Independent creative studio</span><span>Windhoek — NA</span></div>
       <div className="fx-loader-word"><span>Make</span> <em>them</em> <span>stop.</span></div>
       <div className="fx-loader-bottom"><div className="fx-loader-bar" style={{ transform: `scaleX(${count / 100})` }} /><span className="fx-loader-count">{String(count).padStart(3, '0')}</span></div>
     </div>
