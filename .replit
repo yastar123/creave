@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "bun-1.3", "postgresql-16"]
+modules = ["web", "postgresql-16", "nodejs-22"]
 
 [nix]
 channel = "stable-25_05"
@@ -27,7 +27,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "for node_bin in /nix/store/*-nodejs-20.*-wrapped/bin; do if [ -x \"$node_bin/npm\" ]; then PATH=\"$node_bin:$PATH\"; break; fi; done; exec npm run dev"
+args = "for node_bin in /nix/store/*-nodejs-22.*-wrapped/bin; do if [ -x \"$node_bin/npm\" ]; then PATH=\"$node_bin:$PATH\"; break; fi; done; exec npm run dev"
 waitForPort = 5000
 
 [[ports]]

@@ -5,8 +5,8 @@ CREVORA is a React website served by Express, with PostgreSQL for contact enquir
 ## Run on Replit
 
 ```sh
-bun install
-bun run dev
+npm install
+npm run dev
 ```
 
 The development server runs on port 5000. It expects the Replit PostgreSQL database to be available through `DATABASE_URL`.
@@ -14,8 +14,8 @@ The development server runs on port 5000. It expects the Replit PostgreSQL datab
 ## Build and run for production
 
 ```sh
-bun run build
-bun run start
+npm run build
+npm run start
 ```
 
 The contact form saves an enquiry only after the visitor agrees to the privacy notice. The database schema is documented in `server/schema.sql`.

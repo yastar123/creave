@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development && vite build --ssr src/entry-server.tsx --outDir dist/server --emptyOutDir",
     "preview": "vite preview",
     "start": "NODE_ENV=production tsx server/index.ts",
-    "db:push": "bun run scripts/db-push.ts",
+    "db:push": "tsx scripts/db-push.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
