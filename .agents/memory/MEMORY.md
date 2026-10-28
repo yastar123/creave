@@ -1,0 +1,1 @@
+- [Imported Bun setup](imported-bun-setup.md) — restoring dependencies may not revive an already-failed workflow; inspect and restart it once installation finishes.
