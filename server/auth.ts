@@ -23,7 +23,7 @@ const loginLimiter = rateLimit({
   limit: 5,
   standardHeaders: "draft-8",
   legacyHeaders: false,
-  message: { error: "Too many sign-in attempts. Wait 15 minutes and try again." },
+  message: { error: "Login sementara tidak tersedia. Silakan coba lagi nanti." },
 });
 
 const loginSchema = z.object({
