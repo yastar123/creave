@@ -21,9 +21,21 @@ CREATE TABLE IF NOT EXISTS public.cms_admins (
 
 CREATE TABLE IF NOT EXISTS public.cms_pages (
   page_id VARCHAR(100) PRIMARY KEY,
+  title TEXT NOT NULL DEFAULT '',
+  route TEXT NOT NULL DEFAULT '',
+  is_custom BOOLEAN NOT NULL DEFAULT FALSE,
   sections JSONB NOT NULL DEFAULT '[]'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.cms_pages
+  ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS route TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS is_custom BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE UNIQUE INDEX IF NOT EXISTS cms_pages_route_unique_idx
+  ON public.cms_pages (route)
+  WHERE route <> '';
 
 CREATE TABLE IF NOT EXISTS public.cms_globals (
   content_key VARCHAR(40) PRIMARY KEY,

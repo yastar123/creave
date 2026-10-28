@@ -4,8 +4,13 @@ import type { CmsPage, CmsSection } from "./cms-shared";
 import type { SiteContent, SiteContentCollection } from "./site-content-shared";
 
 export type CmsPageRecord = CmsPage & {
+  isCustom: boolean;
   sections: CmsSection[];
   updatedAt: string | null;
+};
+
+export type PublicCmsPage = Pick<CmsPage, "id" | "title" | "route"> & {
+  isCustom: boolean;
 };
 
 export type CmsGlobals = {
@@ -128,6 +133,54 @@ export function useSaveCmsPage() {
   });
 }
 
+export function useCreateCmsPage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ title, slug }: { title: string; slug: string }) =>
+      requestJson<{ page: CmsPageRecord }>("/api/cms/admin/pages", {
+        method: "POST",
+        body: JSON.stringify({ title, slug }),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["cms", "admin", "pages"] });
+    },
+  });
+}
+
+export function useUpdateCmsPage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ pageId, title, slug }: { pageId: string; title: string; slug: string }) =>
+      requestJson<{ page: PublicCmsPage }>(`/api/cms/admin/pages/${encodeURIComponent(pageId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ title, slug }),
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["cms", "admin", "pages"] }),
+        queryClient.invalidateQueries({ queryKey: ["cms", "public"] }),
+      ]);
+    },
+  });
+}
+
+export function useDeleteCmsPage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (pageId: string) =>
+      requestJson<{ ok: true; pageId: string }>(
+        `/api/cms/admin/pages/${encodeURIComponent(pageId)}`,
+        { method: "DELETE" },
+      ),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["cms", "admin", "pages"] }),
+        queryClient.invalidateQueries({ queryKey: ["cms", "public"] }),
+      ]);
+    },
+  });
+}
+
 export function useSaveCmsGlobal() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -148,7 +201,7 @@ export function useSaveCmsGlobal() {
 export function usePublicCmsPage(pageId: string) {
   return useQuery({
     queryKey: ["cms", "public", pageId],
-    queryFn: () => requestJson<{ page: CmsPage; sections: CmsSection[] }>(`/api/cms/public/${encodeURIComponent(pageId)}`),
+    queryFn: () => requestJson<{ page: PublicCmsPage; sections: CmsSection[] }>(`/api/cms/public/${encodeURIComponent(pageId)}`),
     enabled: Boolean(pageId),
     staleTime: 0,
     refetchOnWindowFocus: true,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -26,8 +26,11 @@ import {
   useAdminCmsGlobals,
   useAdminCmsPages,
   useAdminInquiries,
+  useCreateCmsPage,
+  useDeleteCmsPage,
   useSaveCmsGlobal,
   useSaveCmsPage,
+  useUpdateCmsPage,
 } from "@/lib/cms-client";
 import { cmsPages, cmsSectionTypes } from "@/lib/cms-shared";
 import type { CmsSection, CmsSectionType } from "@/lib/cms-shared";
@@ -64,6 +67,13 @@ const cloneSections = (sections: CmsSection[]) =>
   sections.map((section) => ({ ...section, fields: { ...section.fields } }));
 
 const serialize = (value: unknown) => JSON.stringify(value);
+
+const slugify = (value: string) =>
+  value.trim().toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+const sanitizeSlugInput = (value: string) =>
+  value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9-]/g, "").replace(/-{2,}/g, "-").slice(0, 60);
 
 function makeId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -234,6 +244,9 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
   const globalsQuery = useAdminCmsGlobals();
   const inquirySummaryQuery = useAdminInquiries({ page: 1, pageSize: 5, search: "" });
   const savePage = useSaveCmsPage();
+  const createPage = useCreateCmsPage();
+  const updatePage = useUpdateCmsPage();
+  const deletePage = useDeleteCmsPage();
   const saveGlobal = useSaveCmsGlobal();
 
   const [activeView, setActiveView] = useState<AdminView>("overview");
@@ -244,6 +257,12 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
   const [globalStatus, setGlobalStatus] = useState<SaveState>("idle");
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [newSectionType, setNewSectionType] = useState<CmsSectionType>("text");
+  const [isCreatingPage, setIsCreatingPage] = useState(false);
+  const [newPageTitle, setNewPageTitle] = useState("");
+  const [newPageSlug, setNewPageSlug] = useState("");
+  const [pageTitleDraft, setPageTitleDraft] = useState("");
+  const [pageSlugDraft, setPageSlugDraft] = useState("");
+  const [pageManagementError, setPageManagementError] = useState("");
   const [sectionError, setSectionError] = useState("");
   const [mutationError, setMutationError] = useState("");
   const selectionRef = useRef(selection);
@@ -264,7 +283,7 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
     ? pageRecords.find((page) => page.id === selection.id)
     : undefined;
   const pageMeta = selection.kind === "page"
-    ? cmsPages.find((page) => page.id === selection.id)
+    ? currentPage
     : undefined;
   const globalKey = selection.kind === "global" ? selection.id : null;
   const globalTitle = globalKey === "navbar" ? "Navigation" : "Footer";
@@ -278,6 +297,10 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
 
   useEffect(() => {
     if (selection.kind !== "page" || !currentPage) return;
+    setPageTitleDraft(currentPage.title);
+    setPageSlugDraft(currentPage.route.startsWith("/pages/")
+      ? currentPage.route.slice("/pages/".length)
+      : "");
     if (initializedPage.current === selection.id) return;
     initializedPage.current = selection.id;
     const nextSections = cloneSections(currentPage.sections ?? []);
@@ -392,6 +415,57 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
   function openView(view: AdminView) {
     if (activeView === "pages" && view !== "pages") flushCurrentSelection();
     setActiveView(view);
+  }
+
+  async function submitNewPage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPageManagementError("");
+    try {
+      const result = await createPage.mutateAsync({ title: newPageTitle, slug: newPageSlug });
+      const page = result.page;
+      setIsCreatingPage(false);
+      setNewPageTitle("");
+      setNewPageSlug("");
+      setActiveView("pages");
+      setSelection({ kind: "page", id: page.id });
+      setSectionError("");
+    } catch (error) {
+      setPageManagementError(error instanceof Error ? error.message : "Could not create this page.");
+    }
+  }
+
+  async function savePageDetails(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (selection.kind !== "page" || !currentPage?.isCustom) return;
+    setPageManagementError("");
+    try {
+      await updatePage.mutateAsync({
+        pageId: currentPage.id,
+        title: pageTitleDraft,
+        slug: pageSlugDraft,
+      });
+    } catch (error) {
+      setPageManagementError(error instanceof Error ? error.message : "Could not update this page.");
+    }
+  }
+
+  async function removeCurrentPage() {
+    if (selection.kind !== "page" || !currentPage?.isCustom) return;
+    if (!window.confirm(`Delete “${currentPage.title}” and all of its saved sections? This cannot be undone.`)) return;
+    if (pageSaveTimer.current) {
+      clearTimeout(pageSaveTimer.current);
+      pageSaveTimer.current = null;
+    }
+    setPageManagementError("");
+    try {
+      await deletePage.mutateAsync(currentPage.id);
+      initializedPage.current = null;
+      setSections([]);
+      setSelection({ kind: "page", id: "home" });
+      setActiveView("pages");
+    } catch (error) {
+      setPageManagementError(error instanceof Error ? error.message : "Could not delete this page.");
+    }
   }
 
   function choose(next: Selection) {
@@ -528,7 +602,20 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
             <span>Data collections</span>
           </button>
         </div>
-        <div className="ca-sidebar-label">SITE CONTENT <span>{cmsPages.length} PAGES</span></div>
+        <div className="ca-sidebar-label">
+          SITE CONTENT
+          <button
+            aria-label="Create page"
+            className="ca-sidebar-add"
+            onClick={() => {
+              setIsCreatingPage((open) => !open);
+              setPageManagementError("");
+            }}
+            title="Create page"
+            type="button"
+          ><Plus size={14} /></button>
+          <span>{pageRecords.length} PAGES</span>
+        </div>
         <nav aria-label="CMS content">
           {pageGroups.map((group) => (
             <div className="ca-nav-group" key={group.title}>
@@ -557,6 +644,63 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
               })}
             </div>
           ))}
+          {pageRecords.some((page) => page.isCustom) && (
+            <div className="ca-nav-group">
+              <p>Custom pages</p>
+              {pageRecords.filter((page) => page.isCustom).map((page) => (
+                <button
+                  aria-current={activeView === "pages" && selection.kind === "page" && selection.id === page.id ? "page" : undefined}
+                  className={`ca-nav-item ${activeView === "pages" && selection.kind === "page" && selection.id === page.id ? "is-active" : ""}`}
+                  key={page.id}
+                  onClick={() => {
+                    setActiveView("pages");
+                    choose({ kind: "page", id: page.id });
+                  }}
+                  type="button"
+                >
+                  <span className="ca-nav-bullet" />
+                  <span>{page.title}</span>
+                  <span className="ca-nav-route">{page.route}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {isCreatingPage && (
+            <form className="ca-create-page-form" onSubmit={(event) => void submitNewPage(event)}>
+              <label>
+                <span>Page title</span>
+                <input
+                  autoFocus
+                  maxLength={120}
+                  onChange={(event) => {
+                    const title = event.target.value;
+                    setNewPageTitle(title);
+                    setNewPageSlug(slugify(title));
+                  }}
+                  placeholder="e.g. Our approach"
+                  required
+                  value={newPageTitle}
+                />
+              </label>
+              <label>
+                <span>URL slug</span>
+                <input
+                  maxLength={60}
+                  onChange={(event) => setNewPageSlug(sanitizeSlugInput(event.target.value))}
+                  placeholder="our-approach"
+                  required
+                  value={newPageSlug}
+                />
+              </label>
+              <small>Creates a page at /pages/{newPageSlug || "your-slug"}.</small>
+              <div>
+                <button className="ca-create-page-submit" disabled={createPage.isPending} type="submit">
+                  {createPage.isPending ? "Creating…" : "Create page"}
+                </button>
+                <button className="ca-create-page-cancel" onClick={() => setIsCreatingPage(false)} type="button">Cancel</button>
+              </div>
+            </form>
+          )}
         </nav>
         <div className="ca-sidebar-shared">
           <div className="ca-sidebar-label">SHARED CONTENT</div>
@@ -604,7 +748,7 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
                   value={`${selection.kind}:${selection.id}`}
                 >
                   <optgroup label="Pages">
-                    {cmsPages.filter((page) => pageRecords.some((record) => record.id === page.id)).map((page) => (
+                    {pageRecords.map((page) => (
                       <option key={page.id} value={`page:${page.id}`}>{page.title}</option>
                     ))}
                   </optgroup>
@@ -630,6 +774,12 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
           <div className="ca-save-error" role="alert">
             <CircleAlert size={16} /><span>{mutationError}</span>
             <button onClick={() => setMutationError("")} aria-label="Dismiss error" type="button"><X size={15} /></button>
+          </div>
+        )}
+        {activeView === "pages" && pageManagementError && (
+          <div className="ca-save-error" role="alert">
+            <CircleAlert size={16} /><span>{pageManagementError}</span>
+            <button onClick={() => setPageManagementError("")} aria-label="Dismiss page error" type="button"><X size={15} /></button>
           </div>
         )}
 
@@ -665,6 +815,34 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
 
             {selection.kind === "page" ? (
               <>
+                {currentPage?.isCustom && (
+                  <form className="ca-custom-page-settings" onSubmit={(event) => void savePageDetails(event)}>
+                    <label>
+                      <span>Page title</span>
+                      <input
+                        maxLength={120}
+                        onChange={(event) => setPageTitleDraft(event.target.value)}
+                        required
+                        value={pageTitleDraft}
+                      />
+                    </label>
+                    <label>
+                      <span>URL slug</span>
+                      <div className="ca-page-slug-input"><span>/pages/</span><input
+                        maxLength={60}
+                        onChange={(event) => setPageSlugDraft(sanitizeSlugInput(event.target.value))}
+                        required
+                        value={pageSlugDraft}
+                      /></div>
+                    </label>
+                    <button className="ca-button ca-button-light" disabled={updatePage.isPending} type="submit">
+                      {updatePage.isPending ? "Saving…" : "Save page details"}
+                    </button>
+                    <button className="ca-button ca-button-danger" disabled={deletePage.isPending} onClick={() => void removeCurrentPage()} type="button">
+                      <Trash2 size={14} /> Delete page
+                    </button>
+                  </form>
+                )}
                 <div className="ca-section-toolbar">
                   <div><span className="ca-overline">PAGE STRUCTURE</span><span className="ca-count">{sections.length.toString().padStart(2, "0")}</span></div>
                   <div className="ca-add-section-control">

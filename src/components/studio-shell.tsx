@@ -28,6 +28,10 @@ function parseLinks(value: string | undefined, fallback: readonly { title: strin
 function cmsPageId(pathname: string) {
   if (pathname.startsWith('/journal/')) return 'journal-articles';
   if (pathname.startsWith('/work/')) return 'case-studies';
+  if (pathname.startsWith('/pages/')) {
+    const slug = pathname.slice('/pages/'.length).replace(/\/+$/, '');
+    if (slug && !slug.includes('/')) return `custom-route-${slug}`;
+  }
   const direct = {
     '/': 'home',
     '/about': 'about',
@@ -64,6 +68,7 @@ export function StudioShell({ children, darkHeader = false }: { children: ReactN
   const navItems = parseLinks(cmsGlobals?.navbar["primaryLinks"], nav);
   const headerNote = (cmsGlobals?.navbar["studioNote"] || 'Independent minds.\nIntentional work.').split('\n');
   const footerExtraLinks = parseLinks(cmsGlobals?.footer["links"], []);
+  const pageId = cmsPageId(location.pathname);
   const socialLinks = lines(cmsGlobals?.footer["socialLinks"]).map(line => {
     const [name, url] = line.split('|').map(part => part?.trim());
     return name && url && /^https?:\/\//i.test(url) ? { name, url } : null;
@@ -145,7 +150,7 @@ export function StudioShell({ children, darkHeader = false }: { children: ReactN
       <div className="menu-bottom"><span>Social-first creative agency.<br />Windhoek, Namibia.</span><a href={whatsapp} target="_blank" rel="noreferrer"><MessageCircle size={18} /> Say hello on WhatsApp</a></div>
     </div>}
     <div className="scroll-progress" aria-hidden="true" />
-    <main id="main-content" key={location.pathname} className="page-enter">{children}<CmsPageSections pageId={cmsPageId(location.pathname)} /></main>
+    <main id="main-content" key={location.pathname} className="page-enter">{children}<CmsPageSections pageId={pageId} /></main>
     <a className="whatsapp-fab" href={whatsapp} target="_blank" rel="noreferrer" aria-label="Chat with CREVORA on WhatsApp"><MessageCircle size={20} /><span>WhatsApp</span></a>
     <footer className="studio-footer">
       <div className="footer-top"><span className="eyebrow"><span className="status-dot" /> {cmsGlobals?.footer["availability"] || 'Taking on new projects'}</span><span className="footer-location">{cmsGlobals?.footer["description"] || <>Partnering with Namibian businesses through strategic digital marketing, branding, and creative solutions.<br />Serving businesses across Namibia and international markets.</>}</span></div>

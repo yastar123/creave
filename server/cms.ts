@@ -1,4 +1,5 @@
 import type { Express, NextFunction, Request, Response } from "express";
+import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import * as z from "zod";
 import { cmsPages, cmsPageIds, cmsSectionTypes, type CmsSection } from "../src/lib/cms-shared";
@@ -22,6 +23,9 @@ export const cmsSectionSchema = z.object({
 
 export const cmsSectionsSchema = z.array(cmsSectionSchema).max(80);
 
+const cmsPageTitleSchema = z.string().trim().min(1).max(120);
+const cmsPageSlugSchema = z.string().trim().toLowerCase().min(1).max(60)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens.");
 const globalKeys = ["navbar", "footer"] as const;
 const cmsGlobalSchema = z.record(z.string().max(80), z.string().max(8000)).refine(
   (value) => Object.keys(value).length <= 100,
@@ -36,6 +40,19 @@ export async function initializeSiteContent(pool: Pool, defaults: SiteContent) {
        VALUES ($1, $2::jsonb, NOW())
        ON CONFLICT (collection_key) DO NOTHING`,
       [key, JSON.stringify(validated[key])],
+    );
+  }
+}
+
+export async function initializeCmsPages(pool: Pool) {
+  for (const page of cmsPages) {
+    await pool.query(
+      `INSERT INTO public.cms_pages (page_id, title, route, is_custom, sections, updated_at)
+       VALUES ($1, $2, $3, FALSE, '[]'::jsonb, NOW())
+       ON CONFLICT (page_id) DO UPDATE
+       SET title = EXCLUDED.title, route = EXCLUDED.route
+       WHERE public.cms_pages.is_custom = FALSE`,
+      [page.id, page.title, page.route],
     );
   }
 }
@@ -69,18 +86,41 @@ export function registerCmsRoutes(app: Express, pool: Pool) {
   });
 
   app.get("/api/cms/public/:pageId", async (request, response) => {
-    const page = cmsPages.find((item) => item.id === request.params["pageId"]);
-    if (!page) {
+    const pageId = request.params["pageId"] ?? "";
+    const customRoute = pageId.startsWith("custom-route-")
+      ? `/pages/${pageId.slice("custom-route-".length)}`
+      : null;
+    const result = await pool.query<{
+      page_id: string;
+      title: string;
+      route: string;
+      is_custom: boolean;
+      sections: CmsSection[];
+      updated_at: Date | null;
+    }>(
+      `SELECT page_id, title, route, is_custom, sections, updated_at
+       FROM public.cms_pages
+       WHERE page_id = $1 OR ($2::text IS NOT NULL AND route = $2)
+       LIMIT 1`,
+      [pageId, customRoute],
+    );
+    const stored = result.rows[0];
+    const fallback = cmsPages.find((item) => item.id === pageId);
+    if (!stored && !fallback) {
       response.status(404).json({ error: "CMS page not found." });
       return;
     }
 
-    const result = await pool.query<{ sections: CmsSection[] }>(
-      "SELECT sections FROM public.cms_pages WHERE page_id = $1",
-      [page.id],
-    );
+    const page = stored
+      ? {
+          id: stored.page_id,
+          title: stored.title || fallback?.title || "Untitled page",
+          route: stored.route || fallback?.route || "",
+          isCustom: stored.is_custom,
+        }
+      : { ...fallback!, isCustom: false };
     response.setHeader("Cache-Control", "no-store");
-    response.json({ page, sections: result.rows[0]?.sections ?? [] });
+    response.json({ page, sections: stored?.sections ?? [] });
   });
 
   app.get("/api/cms/public-globals", async (_request, response) => {
@@ -220,24 +260,146 @@ export function registerCmsRoutes(app: Express, pool: Pool) {
   });
 
   app.get("/api/cms/admin/pages", async (_request, response) => {
-    const result = await pool.query<{ page_id: string; sections: CmsSection[]; updated_at: Date | null }>(
-      "SELECT page_id, sections, updated_at FROM public.cms_pages",
+    const result = await pool.query<{
+      page_id: string;
+      title: string;
+      route: string;
+      is_custom: boolean;
+      sections: CmsSection[];
+      updated_at: Date | null;
+    }>(
+      "SELECT page_id, title, route, is_custom, sections, updated_at FROM public.cms_pages",
     );
     const saved = new Map(result.rows.map((row) => [row.page_id, row]));
 
     response.setHeader("Cache-Control", "no-store");
     response.json({
-      pages: cmsPages.map((page) => ({
-        ...page,
-        sections: saved.get(page.id)?.sections ?? [],
-        updatedAt: saved.get(page.id)?.updated_at ?? null,
-      })),
+      pages: [
+        ...cmsPages.map((page) => {
+          const row = saved.get(page.id);
+          return {
+            ...page,
+            isCustom: false,
+            sections: row?.sections ?? [],
+            updatedAt: row?.updated_at ?? null,
+          };
+        }),
+        ...result.rows
+          .filter((row) => row.is_custom)
+          .map((row) => ({
+            id: row.page_id,
+            title: row.title,
+            route: row.route,
+            isCustom: true,
+            sections: row.sections,
+            updatedAt: row.updated_at,
+          })),
+      ],
     });
+  });
+
+  app.post("/api/cms/admin/pages", async (request, response) => {
+    const parsed = z.object({
+      title: cmsPageTitleSchema,
+      slug: cmsPageSlugSchema,
+    }).safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: "Enter a valid page title and URL slug." });
+      return;
+    }
+
+    const id = `custom-${randomUUID()}`;
+    const route = `/pages/${parsed.data.slug}`;
+    try {
+      const result = await pool.query<{
+        page_id: string;
+        title: string;
+        route: string;
+        is_custom: boolean;
+        sections: CmsSection[];
+        updated_at: Date;
+      }>(
+        `INSERT INTO public.cms_pages (page_id, title, route, is_custom, sections, updated_at)
+         VALUES ($1, $2, $3, TRUE, '[]'::jsonb, NOW())
+         RETURNING page_id, title, route, is_custom, sections, updated_at`,
+        [id, parsed.data.title, route],
+      );
+      const row = result.rows[0];
+      response.status(201).json({
+        page: {
+          id: row?.page_id ?? id,
+          title: row?.title ?? parsed.data.title,
+          route: row?.route ?? route,
+          isCustom: true,
+          sections: row?.sections ?? [],
+          updatedAt: row?.updated_at ?? new Date(),
+        },
+      });
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
+        response.status(409).json({ error: "A page with that URL slug already exists." });
+        return;
+      }
+      throw error;
+    }
+  });
+
+  app.patch("/api/cms/admin/pages/:pageId", async (request, response) => {
+    const pageId = request.params["pageId"] ?? "";
+    const parsed = z.object({
+      title: cmsPageTitleSchema,
+      slug: cmsPageSlugSchema,
+    }).safeParse(request.body);
+    if (!parsed.success) {
+      response.status(400).json({ error: "Enter a valid page title and URL slug." });
+      return;
+    }
+    const route = `/pages/${parsed.data.slug}`;
+    try {
+      const result = await pool.query<{ page_id: string; title: string; route: string }>(
+        `UPDATE public.cms_pages
+         SET title = $2, route = $3, updated_at = NOW()
+         WHERE page_id = $1 AND is_custom = TRUE
+         RETURNING page_id, title, route`,
+        [pageId, parsed.data.title, route],
+      );
+      const page = result.rows[0];
+      if (!page) {
+        response.status(404).json({ error: "Custom page not found." });
+        return;
+      }
+      response.setHeader("Cache-Control", "no-store");
+      response.json({ page: { ...page, isCustom: true } });
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
+        response.status(409).json({ error: "A page with that URL slug already exists." });
+        return;
+      }
+      throw error;
+    }
+  });
+
+  app.delete("/api/cms/admin/pages/:pageId", async (request, response) => {
+    const pageId = request.params["pageId"] ?? "";
+    const result = await pool.query(
+      "DELETE FROM public.cms_pages WHERE page_id = $1 AND is_custom = TRUE RETURNING page_id",
+      [pageId],
+    );
+    if (!result.rows.length) {
+      response.status(404).json({ error: "Custom page not found." });
+      return;
+    }
+    response.setHeader("Cache-Control", "no-store");
+    response.json({ ok: true, pageId });
   });
 
   app.put("/api/cms/admin/pages/:pageId", async (request, response) => {
     const pageId = request.params["pageId"] ?? "";
-    if (!cmsPageIds.has(pageId)) {
+    const storedPage = await pool.query<{ page_id: string }>(
+      "SELECT page_id FROM public.cms_pages WHERE page_id = $1",
+      [pageId],
+    );
+    if (!storedPage.rows.length && !cmsPageIds.has(pageId)) {
       response.status(404).json({ error: "CMS page not found." });
       return;
     }

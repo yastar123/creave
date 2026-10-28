@@ -17,7 +17,7 @@ export const cmsPages = [
   { id: "maintenance", title: "Maintenance", route: "/maintenance" },
 ] as const;
 
-export type CmsPage = (typeof cmsPages)[number];
+export type CmsPage = { id: string; title: string; route: string; isCustom?: boolean };
 export type CmsPageId = CmsPage["id"];
 export const cmsPageIds = new Set<string>(cmsPages.map((page) => page.id));
 

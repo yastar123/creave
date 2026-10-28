@@ -27,6 +27,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WebSolutionsNamibiaRouteImport } from './routes/web-solutions-namibia'
 import { Route as WorkRouteImport } from './routes/work'
 import { Route as JournalSlugRouteImport } from './routes/journal_.$slug'
+import { Route as PagesSlugRouteImport } from './routes/pages_.$slug'
 import { Route as WorkSlugRouteImport } from './routes/work_.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -121,6 +122,11 @@ const JournalSlugRoute = JournalSlugRouteImport.update({
   path: '/journal/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PagesSlugRoute = PagesSlugRouteImport.update({
+  id: '/pages_/$slug',
+  path: '/pages/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkSlugRoute = WorkSlugRouteImport.update({
   id: '/work_/$slug',
   path: '/work/$slug',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/web-solutions-namibia': typeof WebSolutionsNamibiaRoute
   '/work': typeof WorkRoute
   '/journal/$slug': typeof JournalSlugRoute
+  '/pages/$slug': typeof PagesSlugRoute
   '/work/$slug': typeof WorkSlugRoute
 }
 export interface FileRoutesByTo {
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/web-solutions-namibia': typeof WebSolutionsNamibiaRoute
   '/work': typeof WorkRoute
   '/journal/$slug': typeof JournalSlugRoute
+  '/pages/$slug': typeof PagesSlugRoute
   '/work/$slug': typeof WorkSlugRoute
 }
 export interface FileRoutesById {
@@ -189,6 +197,7 @@ export interface FileRoutesById {
   '/web-solutions-namibia': typeof WebSolutionsNamibiaRoute
   '/work': typeof WorkRoute
   '/journal_/$slug': typeof JournalSlugRoute
+  '/pages_/$slug': typeof PagesSlugRoute
   '/work_/$slug': typeof WorkSlugRoute
 }
 export interface FileRouteTypes {
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
     | '/web-solutions-namibia'
     | '/work'
     | '/journal/$slug'
+    | '/pages/$slug'
     | '/work/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -233,6 +243,7 @@ export interface FileRouteTypes {
     | '/web-solutions-namibia'
     | '/work'
     | '/journal/$slug'
+    | '/pages/$slug'
     | '/work/$slug'
   id:
     | '__root__'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/web-solutions-namibia'
     | '/work'
     | '/journal_/$slug'
+    | '/pages_/$slug'
     | '/work_/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -276,6 +288,7 @@ export interface RootRouteChildren {
   WebSolutionsNamibiaRoute: typeof WebSolutionsNamibiaRoute
   WorkRoute: typeof WorkRoute
   JournalSlugRoute: typeof JournalSlugRoute
+  PagesSlugRoute: typeof PagesSlugRoute
   WorkSlugRoute: typeof WorkSlugRoute
 }
 
@@ -407,6 +420,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JournalSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pages_/$slug': {
+      id: '/pages_/$slug'
+      path: '/pages/$slug'
+      fullPath: '/pages/$slug'
+      preLoaderRoute: typeof PagesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/work_/$slug': {
       id: '/work_/$slug'
       path: '/work/$slug'
@@ -436,6 +456,7 @@ const rootRouteChildren: RootRouteChildren = {
   WebSolutionsNamibiaRoute: WebSolutionsNamibiaRoute,
   WorkRoute: WorkRoute,
   JournalSlugRoute: JournalSlugRoute,
+  PagesSlugRoute: PagesSlugRoute,
   WorkSlugRoute: WorkSlugRoute,
 }
 export const routeTree = rootRouteImport

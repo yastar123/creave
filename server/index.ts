@@ -10,7 +10,7 @@ import * as z from "zod";
 import type { ViteDevServer } from "vite";
 import type { RenderedPage } from "../src/entry-server";
 import type { SiteContent } from "../src/lib/site-content-shared";
-import { initializeSiteContent, loadSiteContent, registerCmsRoutes } from "./cms";
+import { initializeCmsPages, initializeSiteContent, loadSiteContent, registerCmsRoutes } from "./cms";
 import { registerAuthRoutes } from "./auth";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -133,6 +133,7 @@ async function startServer() {
 
   const pageRenderer = await loadPageRenderer();
   await initializeSiteContent(pool, pageRenderer.defaultSiteContent);
+  await initializeCmsPages(pool);
 
   app.use(async (request, response, next) => {
     if (request.method !== "GET" || request.path.startsWith("/api/")) {
