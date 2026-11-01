@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+/public/uploads/
 dist
 dist-ssr
 .env
@@ -34,4 +35,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-

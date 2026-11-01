@@ -2,71 +2,11 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { ServiceVisual } from '@/components/service-visual';
 import { useState } from 'react';
 import { ArrowUpRight, Plus, Minus } from 'lucide-react';
-import { StudioShell, whatsapp } from '@/components/studio-shell';
+import { StudioShell, useConfiguredWhatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
 import { CmsPageBlock, CmsText } from '@/components/cms-sections';
 import { pageHead } from '@/lib/studio-utils';
-
-const packages = [
-  {
-    tier: 'Silver Foundation',
-    price: 'N$ 9 900',
-    period: '/month',
-    note: 'Perfect for startups establishing a professional digital presence.',
-    features: [
-      '7 Strategic Narrative Videos (IG Reels & TikTok)',
-      '5 Premium Brand Visuals (IG Feed)',
-      '2 Platform Mirroring (IG & TikTok)',
-      'Strategic Content Planning & Monthly Calendar',
-      'Trend, Ideas & Audience Research',
-      'Persuasive Scripting & Storytelling',
-      'Community Management (DM & Comments response within 48h)',
-      'SEO Caption Copywriting & Hashtag Strategy',
-      'Performance Monitoring & Insight Reporting',
-      '2 Revision Sessions',
-    ],
-  },
-  {
-    tier: 'Gold Growth',
-    price: 'N$ 17 900',
-    period: '/month',
-    featured: true,
-    note: 'Designed for ambitious brands ready to scale with a data-driven strategy.',
-    features: [
-      '12 Strategic Narrative Videos (IG Reels & TikTok)',
-      '10 Premium Brand Visuals (IG Feed & Facebook)',
-      '3 Platforms (IG, TikTok, Facebook)',
-      'Strategic Ad Management (N$ 1 000 Ad Spend Included)',
-      'Interactive Story Engagement Strategy (Polls, Q&A, CTA & Conversations)',
-      'Audience Persona & Targeting Strategy',
-      'Strategic Content Planning & Monthly Calendar',
-      'Trend, Ideas & Audience Research',
-      'Persuasive Scripting & Storytelling',
-      'Community Management (DM & Comments response within 48h)',
-      'SEO Caption Copywriting & Hashtag Strategy',
-      'Performance Monitoring, Insight Reporting & Next-Month Optimization Plan',
-      '3 Revision Sessions',
-    ],
-  },
-  {
-    tier: 'Platinum Transformation',
-    price: 'Ask for pricing',
-    period: '',
-    note: 'The ultimate solution for market leaders seeking total brand transformation.',
-    features: [
-      '18 Strategic Narrative Videos (IG Reels & TikTok)',
-      '2 High-Value Strategic Carousels (Multi-slide Brand Storytelling)',
-      '10 Premium Brand Visuals (IG Feed & Facebook)',
-      'Full Brand Positioning Strategy (USP, Brand Promise, Competitive Positioning)',
-      'Brand Messaging Framework',
-      'Storytelling Roadmap',
-      'Advanced Community Management',
-      'Influencer & UGC Collaboration Strategy',
-      'Full Campaign Planning (Seasonal Activations, Strategic Giveaways, & Promotional Tie-ins)',
-      '4 Revision Sessions',
-    ],
-  },
-];
+import { useSiteContent } from '@/lib/site-content-context';
 
 const faqs = [
   {
@@ -102,17 +42,20 @@ export const Route = createFileRoute('/social-media-management-namibia')({
 
 function Social() {
   const [active, setActive] = useState<number | null>(0);
+  const { services } = useSiteContent();
+  const whatsappUrl = useConfiguredWhatsapp();
+  const packages = services.find(service => service.to === '/social-media-management-namibia')?.packages ?? [];
   return <StudioShell>
-    <section className="inner-hero">
+    <CmsPageBlock sectionId="hero"><section className="inner-hero">
       <span className="eyebrow">SOCIAL MEDIA MANAGEMENT SERVICES IN NAMIBIA</span>
       <h1><CmsText sectionId="hero" field="headingStart">Strategy first.</CmsText><br /><CmsText sectionId="hero" field="headingEnd">Then <span>content.</span></CmsText></h1>
       <p><CmsText sectionId="hero" field="body">Our Social Media 360° approach is a strategic social media marketing ecosystem designed to communicate your brand’s message to the right audience with clarity and intent.</CmsText></p>
       <div className="hero-actions">
-        <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Request a private discussion <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Request a private discussion <ArrowUpRight /></a></Button>
       </div>
-    </section>
+    </section></CmsPageBlock>
 
-    <ServiceVisual kind="social" />
+    <CmsPageBlock sectionId="visual"><ServiceVisual kind="social" /></CmsPageBlock>
     <section className="sm-intro section-pad">
       <div className="sm-intro-grid">
         <span className="eyebrow">CREVORA — STRATEGIC CREATIVE AGENCY</span>
@@ -123,27 +66,28 @@ function Social() {
       </div>
     </section>
 
-    <section className="sm-packages section-pad" id="packages">
+    <CmsPageBlock sectionId="packages"><section className="sm-packages section-pad" id="packages">
       <div className="section-heading reveal">
         <span className="eyebrow">SOCIAL MEDIA MANAGEMENT PACKAGES</span>
         <h2><CmsText sectionId="packages" field="headingStart">Pick the pace</CmsText><br /><CmsText sectionId="packages" field="headingEnd">of your <span>growth.</span></CmsText></h2>
         <p><CmsText sectionId="packages" field="body">All packages are strategy-led and tailored to each brand’s objectives and audience. All plans exclude VAT.</CmsText></p>
       </div>
-      <div className="sm-package-grid">
-        {packages.map((pkg, i) => <article className={`sm-package ${pkg.featured ? 'is-featured' : ''}`} key={pkg.tier}>
+      {packages.length ? <div className="sm-package-grid">
+        {packages.map((pkg, i) => <article className={`sm-package ${pkg.featured ? 'is-featured' : ''}`} key={`${pkg.name}-${i}`}>
+          {pkg.badge && <span className="sm-package-badge">{pkg.badge}</span>}
           <div className="sm-package-head">
-            <span className="sm-package-tier">0{i + 1} / {pkg.tier}</span>
+            <span className="sm-package-tier">0{i + 1} / {pkg.name}</span>
             <div className="sm-package-price"><strong>{pkg.price}</strong>{pkg.period && <span>{pkg.period}</span>}</div>
-            <p>{pkg.note}</p>
+            <p>{pkg.description}</p>
           </div>
           <div className="sm-package-body">
             <span className="sm-package-label">What you get</span>
             <ul>{pkg.features.map(f => <li key={f}>{f}</li>)}</ul>
-            <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Request private discussion <ArrowUpRight /></a></Button>
+            <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Request private discussion <ArrowUpRight /></a></Button>
           </div>
         </article>)}
-      </div>
-    </section>
+      </div> : <p className="sm-package-empty">Package details are being prepared. Contact us for a tailored plan.</p>}
+    </section></CmsPageBlock>
 
     <section className="sm-faq section-pad">
       <div className="section-heading reveal">
@@ -162,7 +106,7 @@ function Social() {
       </div>
       <div className="sm-faq-cta reveal">
         <p>Still deciding? Let’s talk about which package fits your brand.</p>
-        <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
       </div>
     </section>
 

@@ -5,6 +5,7 @@ import { usePublicCmsPage } from "@/lib/cms-client";
 import { cmsPageDefaultSections } from "@/lib/cms-page-defaults";
 import type { CmsSection } from "@/lib/cms-shared";
 import { CMS_PREVIEW_READY, isCmsPreviewFrame, isCmsPreviewUpdate } from "@/lib/cms-preview";
+import { SiteMedia } from "@/components/site-media";
 
 type CmsPageContextValue = {
   pageId: string;
@@ -106,6 +107,7 @@ export function CmsSectionPreview({ section }: { section: CmsSection }) {
   const title = fields["heading"] || fields["title"] || section.title;
   const body = fields["body"] || "";
   const image = safeImage(fields["image"]);
+  const video = safeImage(fields["video"]);
   const href = safeHref(fields["link"]);
 
   if (!section.enabled) return null;
@@ -124,7 +126,7 @@ export function CmsSectionPreview({ section }: { section: CmsSection }) {
   if (section.type === "image-text") {
     return (
       <section className="cms-public-section cms-public-image-text">
-        {image && <img src={image} alt={fields["imageAlt"] || ""} loading="lazy" />}
+        {(image || video) && <SiteMedia src={image} video={video} alt={fields["imageAlt"] || ""} loading="lazy" />}
         <div><span className="eyebrow">{fields["eyebrow"] || section.title}</span><h2>{title}</h2>{body && <p>{body}</p>}</div>
       </section>
     );

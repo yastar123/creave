@@ -17,6 +17,26 @@ export const cmsPages = [
   { id: "maintenance", title: "Maintenance", route: "/maintenance" },
 ] as const;
 
+export const cmsGlobalKeys = ["navbar", "footer", "settings"] as const;
+export type CmsGlobalKey = (typeof cmsGlobalKeys)[number];
+export type CmsGlobals = Record<CmsGlobalKey, Record<string, string>>;
+export const defaultCmsGlobals: CmsGlobals = {
+  navbar: {},
+  footer: {},
+  settings: {
+    logo: "/crevora-logo.png",
+    email: "hello@crevora.co",
+    phone: "+264 81 578 1719",
+    whatsapp: "https://wa.me/264815781719?text=Hi%20CREVORA",
+    address: "Windhoek, Namibia",
+    hours: "Mon – Fri: 08:00 – 19:00",
+    availability: "Taking on new projects",
+    bannerText: "",
+    bannerImage: "",
+    bannerVideo: "",
+  },
+};
+
 export type CmsPage = { id: string; title: string; route: string; isCustom?: boolean };
 export type CmsPageId = CmsPage["id"];
 export const cmsPageIds = new Set<string>(cmsPages.map((page) => page.id));

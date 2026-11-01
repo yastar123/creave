@@ -4,11 +4,18 @@ import { Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useSiteContent } from '@/lib/site-content-context';
+import { SiteMedia } from '@/components/site-media';
+import { CmsText, useCmsPageSections } from '@/components/cms-sections';
+import { parseCmsMediaOverrides, resolveCmsMedia } from '@/lib/cms-media-overrides';
 
 export function StudioGallery() {
   const { gallery } = useSiteContent();
+  const sections = useCmsPageSections();
+  const gallerySection = sections.find(section => section.id === 'gallery')?.fields;
+  const overrides = parseCmsMediaOverrides(gallerySection?.["mediaItems"]);
+  const items = gallery.map(entry => resolveCmsMedia(entry, entry.title, overrides));
   const [selected, setSelected] = useState<number | null>(null);
-  const item = selected === null ? null : gallery[selected];
+  const item = selected === null ? null : items[selected];
   const pin = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   // Desktop: vertical scroll drives a pinned horizontal film-strip.
@@ -32,9 +39,9 @@ export function StudioGallery() {
     return () => { window.removeEventListener('scroll', on); window.removeEventListener('resize', resize); cancelAnimationFrame(raf); };
   }, []);
   return <section className="explorations-section section-pad">
-    <div className="exploration-heading reveal"><span className="eyebrow">THE STUDIO, IN EXPERIMENTS</span><h2>Room for the<br /><span>unexpected.</span></h2><span className="section-note">Visual studies. New directions.<br />Always a work in progress.</span></div>
-    <div ref={pin} className="hs-pin"><div className="hs-sticky"><div className="hs-progress" aria-hidden="true"><span /></div><div ref={track} className="exploration-grid hs-track">{gallery.map((entry, index) => <figure className="exploration-item reveal" key={entry.title}><Button variant="nav" className="exploration-image" data-cursor="view" aria-label={`Explore ${entry.title}`} onClick={() => setSelected(index)}><img src={entry.image} alt={entry.alt} width={896} height={1120} loading="lazy" /><span className="exploration-index">0{index + 1}</span><ArrowUpRight /></Button><figcaption><strong>{entry.title}</strong><span>{entry.category}</span></figcaption></figure>)}<div className="hs-end" aria-hidden="true"><span>More</span><em>soon.</em></div></div></div></div>
+    <div className="exploration-heading reveal"><span className="eyebrow"><CmsText sectionId="gallery" field="eyebrow">THE STUDIO, IN EXPERIMENTS</CmsText></span><h2><CmsText sectionId="gallery" field="heading">Room for the unexpected.</CmsText></h2><span className="section-note">Visual studies. New directions.<br />Always a work in progress.</span></div>
+    <div ref={pin} className="hs-pin"><div className="hs-sticky"><div className="hs-progress" aria-hidden="true"><span /></div><div ref={track} className="exploration-grid hs-track">{items.map((entry, index) => <figure className="exploration-item reveal" key={entry.title}><Button variant="nav" className="exploration-image" data-cursor="view" aria-label={`Explore ${entry.title}`} onClick={() => setSelected(index)}><SiteMedia src={entry.image} video={entry.video} alt={entry.alt} loading="lazy" /><span className="exploration-index">0{index + 1}</span><ArrowUpRight /></Button><figcaption><strong>{entry.title}</strong><span>{entry.category}</span></figcaption></figure>)}<div className="hs-end" aria-hidden="true"><span>More</span><em>soon.</em></div></div></div></div>
     <p className="gallery-note">Independent concept explorations by CREVORA.</p>
-    <Dialog open={selected !== null} onOpenChange={open => { if (!open) setSelected(null); }}><DialogContent className="project-dialog">{item && <><img src={item.image} alt={item.alt} /><div className="project-dialog-text"><span className="eyebrow">STUDIO EXPLORATION / {item.category}</span><DialogTitle>{item.title}</DialogTitle><DialogDescription>An independent CREVORA concept study in {item.category.toLowerCase()}.</DialogDescription><Button variant="studio" asChild><Link to="/contact">Explore a new direction <ArrowUpRight /></Link></Button></div></>}</DialogContent></Dialog>
+    <Dialog open={selected !== null} onOpenChange={open => { if (!open) setSelected(null); }}><DialogContent className="project-dialog">{item && <><SiteMedia src={item.image} video={item.video} alt={item.alt} /><div className="project-dialog-text"><span className="eyebrow">STUDIO EXPLORATION / {item.category}</span><DialogTitle>{item.title}</DialogTitle><DialogDescription>An independent CREVORA concept study in {item.category.toLowerCase()}.</DialogDescription><Button variant="studio" asChild><Link to="/contact">Explore a new direction <ArrowUpRight /></Link></Button></div></>}</DialogContent></Dialog>
   </section>;
 }

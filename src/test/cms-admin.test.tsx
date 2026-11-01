@@ -4,7 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CmsDashboard } from "@/components/cms-admin";
 import type { CmsInquiry, CmsPageRecord } from "@/lib/cms-client";
-import { cmsPages } from "@/lib/cms-shared";
+import { getCmsPageDefaultSections } from "@/lib/cms-page-defaults";
+import { cmsPages, defaultCmsGlobals } from "@/lib/cms-shared";
+import { defaultSiteContent } from "@/lib/studio-content";
 
 const initialSections = [
   {
@@ -37,15 +39,21 @@ function jsonResponse(payload: unknown) {
 
 function setupDashboard() {
   const writes: Array<{ url: string; body: Record<string, unknown> }> = [];
+  const savedService = getCmsPageDefaultSections("home").find((section) => section.id === "services")!;
+  const legacyService = { ...savedService, fields: { ...savedService.fields } };
+  delete legacyService.fields["mediaItems"];
   let pages: CmsPageRecord[] = cmsPages.map((page) => ({
     ...page,
     isCustom: false,
-    sections: page.id === "home" ? initialSections : [],
+    sections: page.id === "home"
+      ? [...initialSections, legacyService]
+      : [],
     updatedAt: null,
   }));
-  let globals: { navbar: Record<string, string>; footer: Record<string, string> } = {
+  let globals = {
     navbar: { logo: "CREVORA" },
     footer: { email: "hello@crevora.com.na" },
+    settings: { ...defaultCmsGlobals.settings },
   };
 
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -55,6 +63,9 @@ function setupDashboard() {
     }
     if (url.pathname === "/api/cms/admin/globals" && !init?.method) {
       return jsonResponse({ globals });
+    }
+    if (url.pathname === "/api/cms/admin/collections" && !init?.method) {
+      return jsonResponse({ content: defaultSiteContent });
     }
     if (url.pathname.startsWith("/api/cms/admin/inquiries")) {
       const search = (url.searchParams.get("search") ?? "").toLowerCase();
@@ -124,7 +135,7 @@ function setupDashboard() {
         });
       }
       const key = url.pathname.split("/").at(-1);
-      if (key === "navbar" || key === "footer") {
+      if (key === "navbar" || key === "footer" || key === "settings") {
         globals = { ...globals, [key]: body["content"] as Record<string, string> };
         return jsonResponse({ ok: true, content: globals[key] });
       }
@@ -206,6 +217,8 @@ describe("CMS admin dashboard", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "heading value" }), {
       target: { value: "A new home page heading" },
     });
+    expect(writes).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     await waitFor(
       () =>
         expect(
@@ -223,12 +236,59 @@ describe("CMS admin dashboard", () => {
     expect(writes.some(({ url }) => url === "/api/cms/admin/pages/home")).toBe(true);
   });
 
+  it("shows image and video upload controls directly in the homepage services section", async () => {
+    const { writes } = setupDashboard();
+    await screen.findByRole("heading", { name: "Your site, at a glance." });
+    fireEvent.click(screen.getByRole("button", { name: /^Home/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Services Cards/ }));
+
+    expect(await screen.findByRole("textbox", { name: "Social media service image value" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Social media service video value" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Brand identity service image value" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Brand identity service video value" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Add media override" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Media item 1 key" }), {
+      target: { value: "/social-media-management-namibia" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Media item 1 image" }), {
+      target: { value: "/uploads/social.jpg" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Media item 1 video" }), {
+      target: { value: "/uploads/social.mp4" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => {
+      const saved = writes.find(({ body }) =>
+        (body["sections"] as Array<{ id: string; fields: Record<string, string> }> | undefined)
+          ?.find(section => section.id === "services")?.fields["mediaItems"],
+      );
+      expect(saved).toBeDefined();
+      const sections = saved?.body["sections"] as Array<{ id: string; fields: Record<string, string> }>;
+      expect(JSON.parse(sections.find(section => section.id === "services")!.fields["mediaItems"]!)).toEqual([
+        { key: "/social-media-management-namibia", image: "/uploads/social.jpg", video: "/uploads/social.mp4" },
+      ]);
+    });
+    expect(screen.queryByRole("textbox", { name: "New field name" })).not.toBeInTheDocument();
+  });
+
   it("edits shared navigation and footer fields and saves each change", async () => {
     const { writes } = setupDashboard();
 
     await screen.findByRole("heading", { name: "Your site, at a glance." });
     fireEvent.click(screen.getByRole("button", { name: /^Navigation/ }));
     expect(await screen.findByRole("heading", { name: "Navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Main navigation links item 1 label" })).toHaveValue("Services");
+    fireEvent.change(screen.getByRole("textbox", { name: "Main navigation links item 1 label" }), {
+      target: { value: "Our services" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add item to Main navigation links" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Main navigation links item 5 label" }), {
+      target: { value: "Portfolio" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Main navigation links item 5 URL" }), {
+      target: { value: "/work" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Remove Main navigation links item 2" }));
     fireEvent.change(screen.getByRole("textbox", { name: "New field name" }), {
       target: { value: "primaryLink" },
     });
@@ -236,25 +296,53 @@ describe("CMS admin dashboard", () => {
       target: { value: "Home" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Add field" }));
+    expect(writes).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     await waitFor(
       () => expect(writes.some(({ url }) => url === "/api/cms/admin/globals/navbar")).toBe(true),
       { timeout: 3000 },
     );
+    const savedNavbar = writes.find(({ url }) => url === "/api/cms/admin/globals/navbar");
+    expect(savedNavbar?.body["content"]).toMatchObject({
+      primaryLinks: expect.stringContaining("Our services|/services"),
+    });
+    expect((savedNavbar?.body["content"] as Record<string, string>)["primaryLinks"]).not.toContain("About|/about");
+    expect((savedNavbar?.body["content"] as Record<string, string>)["primaryLinks"]).toContain("Portfolio|/work");
 
     fireEvent.click(screen.getByRole("button", { name: /^Footer/ }));
     expect(await screen.findByRole("heading", { name: "Footer" })).toBeInTheDocument();
-    fireEvent.change(screen.getByRole("textbox", { name: "New field name" }), {
-      target: { value: "copyright" },
+    fireEvent.click(await screen.findByRole("button", { name: "Add item to Social media links" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Social media links item 1 label" }), {
+      target: { value: "Instagram" },
     });
-    fireEvent.change(screen.getByRole("textbox", { name: "Starting value" }), {
+    fireEvent.change(screen.getByRole("textbox", { name: "Social media links item 1 URL" }), {
+      target: { value: "https://instagram.com/crevora" },
+    });
+    fireEvent.change(await screen.findByRole("textbox", { name: "copyright value" }), {
       target: { value: "© CREVORA" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Add field" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     await waitFor(
       () => expect(writes.some(({ url }) => url === "/api/cms/admin/globals/footer")).toBe(true),
       { timeout: 3000 },
     );
-  });
+    const savedFooter = writes.find(({ url }) => url === "/api/cms/admin/globals/footer");
+    expect((savedFooter?.body["content"] as Record<string, string>)["socialLinks"]).toBe(
+      "Instagram|https://instagram.com/crevora",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^Site settings/ }));
+    expect(await screen.findByRole("heading", { name: "Site settings" })).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: "bannerText value" }), {
+      target: { value: "Winter studio hours" },
+    });
+    expect(writes).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(
+      () => expect(writes.some(({ url }) => url === "/api/cms/admin/globals/settings")).toBe(true),
+      { timeout: 3000 },
+    );
+  }, 15_000);
 
   it("creates, renames, and deletes a custom page from the page menu", async () => {
     const { fetchMock } = setupDashboard();

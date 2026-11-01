@@ -6,7 +6,11 @@ import svcSocial from '@/assets/svc-social.webp';
 import svcMotion from '@/assets/svc-motion.webp';
 import svcWeb from '@/assets/svc-web.webp';
 import { useSiteContent } from '@/lib/site-content-context';
-import { whatsapp } from '@/components/studio-shell';
+import { useConfiguredWhatsapp } from '@/components/studio-shell';
+import { useCmsPageSections } from '@/components/cms-sections';
+import { SiteImage } from '@/components/site-image';
+import { SiteMedia } from '@/components/site-media';
+import { parseCmsMediaOverrides, resolveCmsMedia } from '@/lib/cms-media-overrides';
 
 const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
@@ -104,7 +108,7 @@ export function ServiceCarousel() {
     <h2 className="lh-title">More than an agency. <span>Strategy, content and digital — in one creative team.</span></h2>
     <div ref={track} className="lh-carousel" onScroll={onScroll}>{services.map((s, i) => <Link key={s.title} to={s.to} className="lh-scard">
       <span className="lh-scard-head"><strong>0{i + 1} · {s.title}.</strong> <span>{s.description.split('.')[0]}.</span></span>
-      <span className="lh-scard-media">{imgs[i] && <img src={imgs[i]} alt="" width={1200} height={1200} loading="lazy" />}{i === 0 && <span className="lh-badge">Core focus</span>}</span>
+      <span className="lh-scard-media">{imgs[i] && <SiteImage src={imgs[i]} alt="" width={1200} height={1200} loading="lazy" />}{i === 0 && <span className="lh-badge">Core focus</span>}</span>
       <ul>{s.tags.slice(0, 3).map(b => <li key={b}><strong>{b.split(' ')[0]}</strong> {b.split(' ').slice(1).join(' ')}</li>)}</ul>
     </Link>)}</div>
     <div className="lh-controls"><button type="button" onClick={() => go(-1)} aria-label="Previous service"><ArrowLeft size={16} /></button><span className="lh-dots">{services.map((_, i) => <i key={i} className={i === idx ? 'on' : ''} />)}</span><button type="button" onClick={() => go(1)} aria-label="Next service"><ArrowRight size={16} /></button></div>
@@ -131,20 +135,28 @@ export function FillStatement() {
 /** Rounded image card with pill tabs that swap the scene per industry. */
 export function IndustryTabs() {
   const { gallery } = useSiteContent();
-  const tabs = gallery.map((item) => [item.title, item.image] as const);
+  const whatsappUrl = useConfiguredWhatsapp();
+  const sections = useCmsPageSections();
+  const industrySection = sections.find(section => section.id === 'industries')?.fields;
+  const overrides = parseCmsMediaOverrides(industrySection?.["mediaItems"]);
+  const tabs = gallery.map((item) => {
+    const resolved = resolveCmsMedia(item, item.title, overrides);
+    return [resolved.title, resolved.image ?? "", resolved.video] as const;
+  });
   const [t, setT] = useState(0);
   if (!tabs.length) return null;
   return <section className="lh-section">
-    <div className="lh-tabcard">{tabs.map(([, src], i) => <img key={i} src={src} alt="" loading="lazy" className={i === t ? 'on' : ''} />)}<span className="lh-veil" />
-      <h2>One studio — adapted to your business</h2>
+    <div className="lh-tabcard">{(industrySection?.["coverImage"] || industrySection?.["coverVideo"]) && <SiteMedia className="lh-tab-cover" src={industrySection["coverImage"]} video={industrySection["coverVideo"]} alt="" />}{tabs.map(([, src, video], i) => <SiteMedia key={i} src={src} video={video} alt="" loading="lazy" className={i === t ? 'on' : ''} />)}<span className="lh-veil" />
+      <h2>{industrySection?.["heading"] ?? 'One studio — adapted to your business'}</h2>
       <div className="lh-pills" role="tablist">{tabs.map(([n], i) => <button key={n} role="tab" aria-selected={i === t} className={i === t ? 'on' : ''} onClick={() => setT(i)}>{n}</button>)}</div>
     </div>
-    <div className="lh-row"><p>Find out how CREVORA fits your brand, audience and goals.</p><a href={whatsapp} target="_blank" rel="noreferrer" className="lh-btn">Discover possibilities <ArrowRight size={16} /></a></div>
+    <div className="lh-row"><p>Find out how CREVORA fits your brand, audience and goals.</p><a href={whatsappUrl} target="_blank" rel="noreferrer" className="lh-btn">Discover possibilities <ArrowRight size={16} /></a></div>
   </section>;
 }
 
 export function StatsBlock() {
-  return <section className="lh-stats"><h2>Real results, not just a portfolio.<br /><span>10+ brands. 4 disciplines.<br />1 clear direction.</span></h2><p>Based on professional experience across Namibian and international brands.</p></section>;
+  const fields = useCmsPageSections().find(section => section.id === 'stats')?.fields;
+  return <section className="lh-stats"><h2>{fields?.["heading"] ?? 'Real results, not just a portfolio.'}<br /><span>{fields?.["body"] ?? '10+ brands. 4 disciplines. 1 clear direction.'}</span></h2><p>Based on professional experience across Namibian and international brands.</p></section>;
 }
 
 export function WhyCards() {
@@ -155,9 +167,10 @@ export function WhyCards() {
 }
 
 export function GrowthPanel() {
+  const whatsappUrl = useConfiguredWhatsapp();
   const feats = [[Layers, 'Four services, one team'], [MessageCircle, 'Reply within one working day'], [Clapperboard, 'In-house content & motion'], [MonitorSmartphone, 'Web built to convert']] as const;
   return <section className="lh-section"><div className="lh-panel"><span className="lh-eyebrow">CREVORA</span><h2>Engineered for growth</h2>
     <div className="lh-feats">{feats.map(([Icon, t]) => <div key={t}><Icon size={18} /><span>{t}</span></div>)}</div>
-    <a href={whatsapp} target="_blank" rel="noreferrer" className="lh-btn">Book a discovery call <ArrowRight size={16} /></a>
+    <a href={whatsappUrl} target="_blank" rel="noreferrer" className="lh-btn">Book a discovery call <ArrowRight size={16} /></a>
   </div></section>;
 }

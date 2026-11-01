@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getRouter } from "@/router";
 import { defaultSiteContent } from "@/lib/studio-content";
+import { defaultCmsGlobals } from "@/lib/cms-shared";
 
 function jsonResponse(payload: unknown, status = 200) {
   return Promise.resolve({
@@ -13,12 +14,15 @@ function jsonResponse(payload: unknown, status = 200) {
   } as Response);
 }
 
-async function setupApp(initialUrl = "/") {
+async function setupApp(
+  initialUrl = "/",
+  globals = { navbar: {}, footer: {}, settings: defaultCmsGlobals.settings },
+) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(String(input), window.location.origin);
 
     if (url.pathname === "/api/cms/public-globals") {
-      return jsonResponse({ globals: { navbar: {}, footer: {} } });
+      return jsonResponse({ globals });
     }
     if (url.pathname.startsWith("/api/cms/public/")) {
       return jsonResponse({
@@ -114,6 +118,64 @@ describe("public navigation and contact form", () => {
       "href",
       "/web-solutions-namibia",
     );
+  });
+
+  it("renders customized desktop/mobile navigation and footer content", async () => {
+    await setupApp("/", {
+      navbar: {
+        primaryLinks: "Studio|/about",
+        mobileLinks: "Start|/contact",
+        studioNote: "Thoughtful work.\nBuilt with intent.",
+        menuDescription: "A creative team for your next chapter.",
+        whatsappLabel: "Message the studio",
+      },
+      footer: {
+        description: "Footer studio story.",
+        callout: "Let’s build\nsomething lasting.",
+        links: "Studio|/about",
+        legalLinks: "Terms|/terms",
+        socialLinks: "Instagram|https://instagram.com/crevora",
+        studioLine: "Built in Windhoek.",
+        marqueeText: "Make good things.",
+        copyright: "CREVORA Studio.",
+        whatsappLabel: "Chat with us",
+        backToTopLabel: "Return to top",
+        contactButtonLabel: "Start a custom conversation",
+      },
+      settings: defaultCmsGlobals.settings,
+    });
+
+    await screen.findByText("Thoughtful work.");
+    expect(document.querySelector(".desktop-nav a[href='/about']")).toHaveTextContent("Studio");
+    expect(document.querySelector(".header-studio-note")).toHaveTextContent("Thoughtful work.");
+    expect(screen.getByText("Footer studio story.")).toBeInTheDocument();
+    expect(screen.getByText("Built in Windhoek.")).toBeInTheDocument();
+    expect(screen.getByText(/CREVORA Studio\./)).toBeInTheDocument();
+    expect(document.querySelector(".footer-marquee-track")).toHaveTextContent("Make good things.");
+    expect(document.querySelector(".footer-nav a[href='/about']")).toHaveTextContent("Studio");
+    expect(document.querySelector(".footer-legal a[href='/terms']")).toHaveTextContent("Terms");
+    expect(document.querySelector(".footer-socials a[href='https://instagram.com/crevora']")).toHaveAttribute(
+      "aria-label",
+      "CREVORA on Instagram",
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Open menu" }));
+    const menu = screen.getByRole("dialog", { name: "Navigation menu" });
+    expect(within(menu).getByRole("link", { name: /Start/ })).toHaveAttribute("href", "/contact");
+    expect(within(menu).getByText(/A creative team for your next chapter/)).toBeInTheDocument();
+    expect(within(menu).getByRole("link", { name: /Message the studio/ })).toBeInTheDocument();
+  });
+
+  it("uses the configured WhatsApp link on homepage calls to action", async () => {
+    const whatsappUrl = "https://wa.me/264811112222?text=Hello";
+    await setupApp("/", {
+      navbar: {},
+      footer: {},
+      settings: { ...defaultCmsGlobals.settings, whatsapp: whatsappUrl },
+    });
+
+    const cta = await screen.findByRole("link", { name: /Book a discovery call/ });
+    await waitFor(() => expect(cta).toHaveAttribute("href", whatsappUrl));
   });
 
   it("validates required fields and privacy consent before sending", async () => {

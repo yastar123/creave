@@ -2,7 +2,15 @@ import type { Express, NextFunction, Request, Response } from "express";
 import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import * as z from "zod";
-import { cmsPages, cmsPageIds, cmsSectionTypes, type CmsSection } from "../src/lib/cms-shared";
+import {
+  cmsGlobalKeys,
+  cmsPages,
+  cmsPageIds,
+  cmsSectionTypes,
+  defaultCmsGlobals,
+  type CmsGlobalKey,
+  type CmsSection,
+} from "../src/lib/cms-shared";
 import { getCmsPageDefaultSections } from "../src/lib/cms-page-defaults";
 import {
   collectionItemIdentity,
@@ -27,7 +35,7 @@ export const cmsSectionsSchema = z.array(cmsSectionSchema).max(80);
 const cmsPageTitleSchema = z.string().trim().min(1).max(120);
 const cmsPageSlugSchema = z.string().trim().toLowerCase().min(1).max(60)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens.");
-const globalKeys = ["navbar", "footer"] as const;
+const globalKeys = cmsGlobalKeys;
 const cmsGlobalSchema = z.record(z.string().max(80), z.string().max(8000)).refine(
   (value) => Object.keys(value).length <= 100,
   "Too many content fields.",
@@ -43,6 +51,54 @@ export async function initializeSiteContent(pool: Pool, defaults: SiteContent) {
       [key, JSON.stringify(validated[key])],
     );
   }
+
+  const legacyImageReplacements = new Map<string, string>([
+    ["CREVORA-NEW1.png", "/crevora-logo.png"],
+  ]);
+  const legacyGalleryAssets = [
+    ["social-phone.jpg", "Feed Studies"],
+    ["mora-brand.jpg", "MORA"],
+    ["identity-poster.jpg", "Asterisk"],
+    ["stride-campaign.jpg", "STRIDE"],
+    ["crevora-chrome.jpg", "Form"],
+  ] as const;
+  for (const [filename, title] of legacyGalleryAssets) {
+    const image = validated.gallery.find((item) => item.title === title)?.image;
+    if (image) legacyImageReplacements.set(filename, image);
+  }
+
+  const existing = await pool.query<{ collection_key: string; items: unknown }>(
+    "SELECT collection_key, items FROM public.cms_content_collections",
+  );
+  for (const row of existing.rows) {
+    const migrated = replaceLegacyAssetReferences(row.items, legacyImageReplacements);
+    if (JSON.stringify(migrated) === JSON.stringify(row.items)) continue;
+    await pool.query(
+      `UPDATE public.cms_content_collections
+       SET items = $2::jsonb, updated_at = NOW()
+       WHERE collection_key = $1`,
+      [row.collection_key, JSON.stringify(migrated)],
+    );
+  }
+}
+
+function replaceLegacyAssetReferences(value: unknown, replacements: Map<string, string>): unknown {
+  if (typeof value === "string" && value.includes("/__l5e/assets-v1/")) {
+    const filename = value.split("/").at(-1) ?? "";
+    return replacements.get(filename) ?? value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => replaceLegacyAssetReferences(item, replacements));
+  }
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        replaceLegacyAssetReferences(item, replacements),
+      ]),
+    );
+  }
+  return value;
 }
 
 export async function initializeCmsPages(pool: Pool) {
@@ -141,10 +197,12 @@ export function registerCmsRoutes(app: Express, pool: Pool) {
     const saved = new Map(result.rows.map((row) => [row.content_key, row.content]));
     response.setHeader("Cache-Control", "no-store");
     response.json({
-      globals: {
-        navbar: saved.get("navbar") ?? {},
-        footer: saved.get("footer") ?? {},
-      },
+      globals: Object.fromEntries(
+        cmsGlobalKeys.map((key) => [
+          key,
+          { ...defaultCmsGlobals[key], ...(saved.get(key) ?? {}) },
+        ]),
+      ),
     });
   });
 
@@ -287,10 +345,19 @@ export function registerCmsRoutes(app: Express, pool: Pool) {
       pages: [
         ...cmsPages.map((page) => {
           const row = saved.get(page.id);
+          const defaults = getCmsPageDefaultSections(page.id);
+          const storedSections = row?.sections ?? [];
           return {
             ...page,
             isCustom: false,
-            sections: row?.sections ?? [],
+            sections: defaults.map((section) => {
+              const stored = storedSections.find((item) => item.id === section.id);
+              return {
+                ...section,
+                ...stored,
+                fields: { ...section.fields, ...(stored?.fields ?? {}) },
+              };
+            }),
             updatedAt: row?.updated_at ?? null,
           };
         }),
@@ -453,16 +520,18 @@ export function registerCmsRoutes(app: Express, pool: Pool) {
     const saved = new Map(result.rows.map((row) => [row.content_key, row.content]));
     response.setHeader("Cache-Control", "no-store");
     response.json({
-      globals: {
-        navbar: saved.get("navbar") ?? {},
-        footer: saved.get("footer") ?? {},
-      },
+      globals: Object.fromEntries(
+        cmsGlobalKeys.map((key) => [
+          key,
+          { ...defaultCmsGlobals[key], ...(saved.get(key) ?? {}) },
+        ]),
+      ),
     });
   });
 
   app.put("/api/cms/admin/globals/:key", async (request, response) => {
     const key = request.params["key"] ?? "";
-    if (!globalKeys.includes(key as (typeof globalKeys)[number])) {
+    if (!globalKeys.includes(key as CmsGlobalKey)) {
       response.status(404).json({ error: "CMS setting not found." });
       return;
     }

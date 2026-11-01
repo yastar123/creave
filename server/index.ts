@@ -13,6 +13,7 @@ import type { RenderedPage } from "../src/entry-server";
 import type { SiteContent } from "../src/lib/site-content-shared";
 import { initializeCmsPages, initializeSiteContent, loadSiteContent, registerCmsRoutes } from "./cms";
 import { registerAuthRoutes } from "./auth";
+import { registerCmsMediaRoutes } from "./media";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const clientDirectory = path.join(projectRoot, "dist", "client");
@@ -39,6 +40,9 @@ app.use(express.json({ limit: "12kb" }));
 
 registerAuthRoutes(app);
 registerCmsRoutes(app, pool);
+const mediaDirectory = path.join(projectRoot, "public", "uploads");
+registerCmsMediaRoutes(app, mediaDirectory);
+app.use("/uploads", express.static(mediaDirectory, { immutable: true, maxAge: "1y" }));
 
 const contactSchema = z.object({
   name: z.string().trim().min(2).max(100),

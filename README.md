@@ -63,3 +63,5 @@ npm run lint
 ```
 
 The CMS at `/admin` manages page sections, custom pages, shared navigation and footer content, and public-site collections. Contact enquiries submitted through the website appear in the admin inbox. The contact form saves an enquiry only after the visitor agrees to the privacy notice. The database schema is documented in `server/schema.sql`.
+
+The admin media library accepts JPG, PNG, GIF, WebP, AVIF, MP4, and WebM files up to 100 MB. Uploads are stored in `public/uploads/` and served from `/uploads/`; back up this directory with the database when moving or restoring the site. The directory is intentionally excluded from Git.

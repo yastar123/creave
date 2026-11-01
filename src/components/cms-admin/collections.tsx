@@ -6,14 +6,16 @@ import {
   collectionItemIdentity,
   type SiteContentCollection,
 } from "@/lib/site-content-shared";
+import { defaultWebsitePackages } from "@/lib/studio-content";
+import { CmsMediaField } from "./media-field";
 
 import "./collections.css";
 
 const collectionOptions: { key: SiteContentCollection; label: string; description: string }[] = [
-  { key: "services", label: "Services", description: "Service cards, service page links, and the services menu." },
-  { key: "projects", label: "Projects", description: "Portfolio entries and project detail pages." },
-  { key: "articles", label: "Articles", description: "Journal articles, categories, and related service links." },
-  { key: "gallery", label: "Gallery", description: "Studio visuals shown in the gallery and portfolio." },
+  { key: "services", label: "Services", description: "Service copy, homepage video, prices, packages, and service page links." },
+  { key: "projects", label: "Projects", description: "Portfolio covers, detail pages, and gallery images or videos." },
+  { key: "articles", label: "Articles", description: "Journal articles, cover images or videos, categories, and related services." },
+  { key: "gallery", label: "Gallery", description: "Studio images and videos shown throughout the gallery and portfolio." },
   { key: "trustedBy", label: "Trusted by", description: "Client and partner names or approved logos." },
   { key: "socials", label: "Social profiles", description: "Verified social profile links." },
   { key: "legalLinks", label: "Legal links", description: "Privacy and terms links shown in the footer." },
@@ -29,6 +31,10 @@ function blankRecord(key: SiteContentCollection): Record<string, unknown> {
       description: "",
       tags: [],
       detail: "",
+      image: "",
+      video: "",
+      price: "",
+      packages: [],
     },
     projects: {
       slug: "",
@@ -38,6 +44,7 @@ function blankRecord(key: SiteContentCollection): Record<string, unknown> {
       category: "",
       services: [],
       image: "",
+      video: "",
       alt: "",
       title: "",
       description: "",
@@ -55,9 +62,12 @@ function blankRecord(key: SiteContentCollection): Record<string, unknown> {
       author: "",
       body: [],
       related: { label: "", to: "" },
+      image: "",
+      video: "",
+      imageAlt: "",
     },
-    gallery: { title: "", category: "", image: "", alt: "" },
-    trustedBy: { name: "" },
+    gallery: { title: "", category: "", image: "", video: "", alt: "" },
+    trustedBy: { name: "", logo: "", url: "" },
     socials: { name: "", url: "" },
     legalLinks: { title: "", to: "" },
   };
@@ -68,7 +78,9 @@ function toEditorFields(record: Record<string, unknown>) {
   return Object.fromEntries(
     Object.entries(record).map(([key, value]) => [
       key,
-      Array.isArray(value) && value.every((item) => typeof item === "string")
+      ["tags", "services", "body"].includes(key)
+        && Array.isArray(value)
+        && value.every((item) => typeof item === "string")
         ? value.join("\n")
         : typeof value === "string"
           ? value
@@ -94,20 +106,296 @@ function parseEditorFields(
 ): Record<string, unknown> {
   const record: Record<string, unknown> = {};
   for (const [field, value] of Object.entries(fields)) {
-    if ((field === "image" || field === "imageAlt" || field === "logo" || field === "url") && !value.trim()) {
+    if (["image", "imageAlt", "logo", "url", "video", "price"].includes(field) && !value.trim()) {
       continue;
     }
     if (["tags", "services", "body"].includes(field)) {
       record[field] = value.split("\n").map((item) => item.trim()).filter(Boolean);
       continue;
     }
-    if ((key === "projects" && field === "gallery") || (key === "articles" && field === "related")) {
+    if (
+      (key === "projects" && field === "gallery") ||
+      (key === "articles" && field === "related") ||
+      (key === "services" && field === "packages")
+    ) {
       record[field] = JSON.parse(value);
       continue;
     }
     record[field] = value;
   }
   return record;
+}
+
+type ProjectGalleryItem = { image?: string; video?: string; alt: string };
+type ServicePackage = {
+  name: string;
+  price: string;
+  period?: string;
+  description: string;
+  features: string[];
+  featured?: boolean;
+  badge?: string;
+};
+
+function parseProjectGallery(value: string): ProjectGalleryItem[] | null {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) return null;
+    if (!parsed.every((item) => item && typeof item === "object" && !Array.isArray(item))) return null;
+    return parsed.map((item) => {
+      const record = item as Record<string, unknown>;
+      return {
+        ...(typeof record["image"] === "string" && record["image"] ? { image: record["image"] } : {}),
+        ...(typeof record["video"] === "string" && record["video"] ? { video: record["video"] } : {}),
+        alt: typeof record["alt"] === "string" ? record["alt"] : "",
+      };
+    });
+  } catch {
+    return null;
+  }
+}
+
+function ProjectGalleryMediaField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const items = parseProjectGallery(value);
+  if (!items) {
+    return (
+      <textarea
+        aria-label="Project gallery JSON"
+        onChange={(event) => onChange(event.target.value)}
+        rows={7}
+        value={value}
+      />
+    );
+  }
+  const validItems = items;
+
+  function updateItem(index: number, update: (item: ProjectGalleryItem) => ProjectGalleryItem) {
+    onChange(JSON.stringify(validItems.map((item, itemIndex) => itemIndex === index ? update(item) : item), null, 2));
+  }
+
+  return (
+    <div className="ca-nested-gallery">
+      {validItems.map((item, index) => (
+        <fieldset className="ca-nested-gallery-item" key={index}>
+          <legend>Gallery item {index + 1}</legend>
+          <label>
+            <span>Image</span>
+            <CmsMediaField
+              label={`Gallery item ${index + 1} image`}
+              onChange={(image) => updateItem(index, (current) => {
+                const next = { ...current };
+                if (image.trim()) next.image = image;
+                else delete next.image;
+                return next;
+              })}
+              value={item.image ?? ""}
+            />
+          </label>
+          <label>
+            <span>Video</span>
+            <CmsMediaField
+              label={`Gallery item ${index + 1} video`}
+              kind="video"
+              onChange={(video) => updateItem(index, (current) => {
+                const next = { ...current };
+                if (video.trim()) next.video = video;
+                else delete next.video;
+                return next;
+              })}
+              value={item.video ?? ""}
+            />
+          </label>
+          <label>
+            <span>Alt text</span>
+            <input
+              aria-label={`Gallery item ${index + 1} alt text`}
+              onChange={(event) => updateItem(index, (current) => ({ ...current, alt: event.target.value }))}
+              value={item.alt}
+            />
+          </label>
+          <button
+            className="ca-button ca-button-danger"
+            onClick={() => onChange(JSON.stringify(validItems.filter((_, itemIndex) => itemIndex !== index), null, 2))}
+            type="button"
+          >
+            Remove gallery item
+          </button>
+        </fieldset>
+      ))}
+      <button
+        className="ca-button ca-button-light"
+        onClick={() => onChange(JSON.stringify([...validItems, { alt: "" }], null, 2))}
+        type="button"
+      >
+        Add gallery item
+      </button>
+      <details>
+        <summary>Edit gallery JSON</summary>
+        <textarea
+          aria-label="Project gallery JSON"
+          onChange={(event) => onChange(event.target.value)}
+          rows={7}
+          value={value}
+        />
+      </details>
+    </div>
+  );
+}
+
+function parseServicePackages(value: string): ServicePackage[] | null {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) return null;
+    if (!parsed.every((item) => item && typeof item === "object" && !Array.isArray(item))) return null;
+    return parsed.map((item) => {
+      const record = item as Record<string, unknown>;
+      const features = record["features"];
+      return {
+        name: typeof record["name"] === "string" ? record["name"] : "",
+        price: typeof record["price"] === "string" ? record["price"] : "",
+        ...(typeof record["period"] === "string" ? { period: record["period"] } : {}),
+        description: typeof record["description"] === "string" ? record["description"] : "",
+        features: Array.isArray(features) && features.every((feature): feature is string => typeof feature === "string")
+          ? features
+          : [],
+        ...(record["featured"] === true ? { featured: true } : {}),
+        ...(typeof record["badge"] === "string" ? { badge: record["badge"] } : {}),
+      };
+    });
+  } catch {
+    return null;
+  }
+}
+
+function ServicePackagesField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const packages = parseServicePackages(value);
+  if (!packages) {
+    return (
+      <textarea
+        aria-label="Packages JSON"
+        onChange={(event) => onChange(event.target.value)}
+        rows={7}
+        value={value}
+      />
+    );
+  }
+
+  const validPackages = packages;
+  function updatePackage(index: number, patch: Partial<ServicePackage>) {
+    onChange(JSON.stringify(validPackages.map((item, itemIndex) =>
+      itemIndex === index ? { ...item, ...patch } : item,
+    ), null, 2));
+  }
+
+  return (
+    <div className="ca-nested-packages">
+      {validPackages.length === 0 && <p>No packages yet. Add the first package below.</p>}
+      {validPackages.map((item, index) => (
+        <fieldset className="ca-nested-package" key={index}>
+          <legend>Package {index + 1}</legend>
+          <label>
+            <span>Package name</span>
+            <input
+              aria-label={`Package ${index + 1} name`}
+              onChange={(event) => updatePackage(index, { name: event.target.value })}
+              value={item.name}
+            />
+          </label>
+          <label>
+            <span>Price</span>
+            <input
+              aria-label={`Package ${index + 1} price`}
+              onChange={(event) => updatePackage(index, { price: event.target.value })}
+              value={item.price}
+            />
+          </label>
+          <label>
+            <span>Price period</span>
+            <input
+              aria-label={`Package ${index + 1} price period`}
+              onChange={(event) => updatePackage(index, { period: event.target.value })}
+              value={item.period ?? ""}
+            />
+          </label>
+          <label>
+            <span>Badge</span>
+            <input
+              aria-label={`Package ${index + 1} badge`}
+              onChange={(event) => updatePackage(index, { badge: event.target.value })}
+              value={item.badge ?? ""}
+            />
+          </label>
+          <label className="ca-package-featured">
+            <input
+              aria-label={`Package ${index + 1} featured`}
+              checked={item.featured ?? false}
+              onChange={(event) => updatePackage(index, { featured: event.target.checked })}
+              type="checkbox"
+            />
+            <span>Highlight this package</span>
+          </label>
+          <label>
+            <span>Description</span>
+            <textarea
+              aria-label={`Package ${index + 1} description`}
+              onChange={(event) => updatePackage(index, { description: event.target.value })}
+              rows={3}
+              value={item.description}
+            />
+          </label>
+          <label>
+            <span>Features <em>One item per line</em></span>
+            <textarea
+              aria-label={`Package ${index + 1} features`}
+              onChange={(event) => updatePackage(index, {
+                features: event.target.value.split("\n").map((feature) => feature.trim()).filter(Boolean),
+              })}
+              rows={5}
+              value={item.features.join("\n")}
+            />
+          </label>
+          <button
+            className="ca-button ca-button-danger"
+            onClick={() => onChange(JSON.stringify(validPackages.filter((_, itemIndex) => itemIndex !== index), null, 2))}
+            type="button"
+          >
+            Remove package
+          </button>
+        </fieldset>
+      ))}
+      <button
+        className="ca-button ca-button-light"
+        onClick={() => onChange(JSON.stringify([
+          ...validPackages,
+          { name: "", price: "", description: "", features: [] },
+        ], null, 2))}
+        type="button"
+      >
+        Add package
+      </button>
+      <details>
+        <summary>Edit packages JSON</summary>
+        <textarea
+          aria-label="Packages JSON"
+          onChange={(event) => onChange(event.target.value)}
+          rows={7}
+          value={value}
+        />
+      </details>
+    </div>
+  );
 }
 
 export function CmsCollections() {
@@ -141,7 +429,17 @@ export function CmsCollections() {
       setFields({});
       return;
     }
-    setFields(toEditorFields(record as Record<string, unknown>));
+    const recordFields = record as Record<string, unknown>;
+    const mergedFields = {
+      ...blankRecord(activeKey),
+      ...recordFields,
+      ...(activeKey === "services"
+        && recordFields["to"] === "/web-solutions-namibia"
+        && !("packages" in recordFields)
+        ? { packages: defaultWebsitePackages }
+        : {}),
+    };
+    setFields(toEditorFields(mergedFields));
   }, [activeKey, creating, query.data, selectedIndex]);
 
   const itemButtons = useMemo(
@@ -320,13 +618,50 @@ export function CmsCollections() {
           ) : (
             <div className="ca-record-fields">
               {Object.entries(fields).map(([field, value]) => {
-                const complex = (activeKey === "projects" && field === "gallery") || (activeKey === "articles" && field === "related");
+                const complex = (activeKey === "projects" && field === "gallery") ||
+                  (activeKey === "articles" && field === "related") ||
+                  (activeKey === "services" && field === "packages");
                 const isLineList = ["tags", "services", "body"].includes(field);
                 const isLongText = ["description", "detail", "challenge", "approach", "result", "excerpt"].includes(field);
+                const mediaKind = field === "video" ? "video" : ["image", "logo"].includes(field) ? "image" : null;
+                const projectGallery = activeKey === "projects" && field === "gallery";
+                const servicePackages = activeKey === "services" && field === "packages";
                 return (
                   <label className={`ca-record-field ${complex || isLineList || isLongText ? "is-wide" : ""}`} key={field}>
                     <span>{prettyFieldName(field)}{complex && <em>JSON</em>}{isLineList && <em>One item per line</em>}</span>
-                    {complex || isLineList || isLongText ? (
+                    {projectGallery ? (
+                      <ProjectGalleryMediaField
+                        onChange={(nextValue) => {
+                          setFields((current) => ({ ...current, [field]: nextValue }));
+                          setDirty(true);
+                          setValidationError("");
+                          setSavedLabel("");
+                        }}
+                        value={value}
+                      />
+                    ) : servicePackages ? (
+                      <ServicePackagesField
+                        onChange={(nextValue) => {
+                          setFields((current) => ({ ...current, [field]: nextValue }));
+                          setDirty(true);
+                          setValidationError("");
+                          setSavedLabel("");
+                        }}
+                        value={value}
+                      />
+                    ) : mediaKind ? (
+                      <CmsMediaField
+                        label={prettyFieldName(field)}
+                        kind={mediaKind}
+                        onChange={(nextValue) => {
+                          setFields((current) => ({ ...current, [field]: nextValue }));
+                          setDirty(true);
+                          setValidationError("");
+                          setSavedLabel("");
+                        }}
+                        value={value}
+                      />
+                    ) : complex || isLineList || isLongText ? (
                       <textarea
                         aria-label={prettyFieldName(field)}
                         rows={complex ? 7 : isLongText ? 4 : 3}

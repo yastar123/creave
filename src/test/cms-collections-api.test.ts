@@ -124,14 +124,73 @@ describe("CMS collection API", () => {
     expect(storedContent.services).toHaveLength(defaultSiteContent.services.length);
   });
 
+  it("accepts video-only project, article, and gallery media", async () => {
+    const headers = { Cookie: makeAdminCookie(), "Content-Type": "application/json" };
+    const project = { ...defaultSiteContent.projects[0]! };
+    delete project.image;
+    project.video = "/uploads/project.webm";
+    project.gallery = project.gallery.map((item, index) => {
+      const videoItem = { ...item, video: `/uploads/project-${index}.mp4` };
+      delete videoItem.image;
+      return videoItem;
+    });
+
+    const article = { ...defaultSiteContent.articles[0]! };
+    delete article.image;
+    article.video = "/uploads/article.mp4";
+
+    const galleryItem = { ...defaultSiteContent.gallery[0]! };
+    delete galleryItem.image;
+    galleryItem.video = "/uploads/gallery.webm";
+
+    const projectsResponse = await fetch(`${origin}/api/cms/admin/collections/projects`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ items: [project] }),
+    });
+    const articlesResponse = await fetch(`${origin}/api/cms/admin/collections/articles`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ items: [article] }),
+    });
+    const galleryResponse = await fetch(`${origin}/api/cms/admin/collections/gallery`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ items: [galleryItem] }),
+    });
+
+    expect(projectsResponse.status).toBe(200);
+    expect(articlesResponse.status).toBe(200);
+    expect(galleryResponse.status).toBe(200);
+    expect(storedContent.projects[0]?.video).toBe("/uploads/project.webm");
+    expect(storedContent.articles[0]?.video).toBe("/uploads/article.mp4");
+    expect(storedContent.gallery[0]?.video).toBe("/uploads/gallery.webm");
+  });
+
   it("seeds only missing content keys and preserves admin edits", async () => {
     const seeded = JSON.parse(JSON.stringify(defaultSiteContent)) as SiteContent;
     seeded.services[0] = { ...seeded.services[0]!, menuNote: "Existing admin edit" };
+    const legacyMoraImage = "/__l5e/assets-v1/8a9bd257-c6c4-485c-98b4-3ddd1549f0bd/mora-brand.jpg";
+    seeded.projects[0] = {
+      ...seeded.projects[0]!,
+      image: legacyMoraImage,
+      gallery: seeded.projects[0]!.gallery.map((image) => ({ ...image, image: legacyMoraImage })),
+    };
     const pool = {
       query: async (sql: string, values?: unknown[]) => {
         if (sql.includes("INSERT INTO public.cms_content_collections")) {
           const key = String(values?.[0] ?? "") as keyof SiteContent;
           if (!seeded[key]) seeded[key] = JSON.parse(String(values?.[1] ?? "[]")) as never;
+          return { rows: [] };
+        }
+        if (sql.includes("SELECT collection_key, items")) {
+          return {
+            rows: Object.entries(seeded).map(([collection_key, items]) => ({ collection_key, items })),
+          };
+        }
+        if (sql.includes("UPDATE public.cms_content_collections")) {
+          const key = String(values?.[0] ?? "") as keyof SiteContent;
+          seeded[key] = JSON.parse(String(values?.[1] ?? "[]")) as never;
           return { rows: [] };
         }
         return { rows: [] };
@@ -140,5 +199,7 @@ describe("CMS collection API", () => {
 
     await initializeSiteContent(pool, defaultSiteContent);
     expect(seeded.services[0]?.menuNote).toBe("Existing admin edit");
+    expect(seeded.projects[0]?.image).toBe(defaultSiteContent.gallery[1]?.image);
+    expect(seeded.projects[0]?.gallery[0]?.image).toBe(defaultSiteContent.gallery[1]?.image);
   });
 });

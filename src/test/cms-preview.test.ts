@@ -8,7 +8,7 @@ describe("CMS live preview messages", () => {
       type: CMS_PREVIEW_MESSAGE,
       pageId: "home",
       sections: [{ id: "hero", type: "hero", title: "Hero", enabled: true, fields: { heading: "Draft" } }],
-      globals: { navbar: { primaryLinks: "Home|/" }, footer: {} },
+      globals: { navbar: { primaryLinks: "Home|/" }, footer: {}, settings: {} },
     })).toBe(true);
   });
 

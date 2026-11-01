@@ -17,6 +17,16 @@ const publicImage = z
     "Use a site-relative path or an HTTP(S) image URL.",
   );
 
+const publicMedia = z
+  .string()
+  .trim()
+  .min(1)
+  .max(2048)
+  .refine(
+    (value) => (value.startsWith("/") && !value.startsWith("//")) || /^https?:\/\//i.test(value),
+    "Use a site-relative path or an HTTP(S) media URL.",
+  );
+
 const externalUrl = z.string().trim().url().max(2048).refine(
   (value) => /^https?:\/\//i.test(value),
   "Use an HTTP(S) URL.",
@@ -32,6 +42,20 @@ export const siteContentCollectionSchemas = {
       description: z.string().trim().min(1).max(2000),
       tags: z.array(z.string().trim().min(1).max(120)).max(20),
       detail: z.string().trim().min(1).max(2000),
+      image: publicImage.optional(),
+      video: publicMedia.optional(),
+      price: z.string().trim().max(120).optional(),
+      packages: z.array(
+        z.object({
+          name: z.string().trim().min(1).max(160),
+          price: z.string().trim().max(120),
+          period: z.string().trim().max(80).optional(),
+          description: z.string().trim().max(1000),
+          features: z.array(z.string().trim().min(1).max(240)).max(30),
+          featured: z.boolean().optional(),
+          badge: z.string().trim().max(120).optional(),
+        }),
+      ).max(20).optional(),
     }),
   ).max(80),
   projects: z.array(
@@ -42,15 +66,20 @@ export const siteContentCollectionSchemas = {
       year: z.string().trim().max(20),
       category: z.string().trim().min(1).max(160),
       services: z.array(z.string().trim().min(1).max(160)).max(20),
-      image: publicImage,
+      image: publicImage.optional(),
+      video: publicMedia.optional(),
       alt: z.string().trim().max(500),
       title: z.string().trim().min(1).max(300),
       description: z.string().trim().min(1).max(4000),
       challenge: z.string().trim().max(4000),
       approach: z.string().trim().max(4000),
       result: z.string().trim().max(4000),
-      gallery: z.array(z.object({ image: publicImage, alt: z.string().trim().max(500) })).max(40),
-    }),
+      gallery: z.array(z.object({
+        image: publicImage.optional(),
+        video: publicMedia.optional(),
+        alt: z.string().trim().max(500),
+      }).refine((item) => item.image || item.video, "Provide an image or video for every gallery item.")).max(40),
+    }).refine((project) => project.image || project.video, "Provide a cover image or video for every project."),
   ).max(200),
   articles: z.array(
     z.object({
@@ -66,6 +95,7 @@ export const siteContentCollectionSchemas = {
         to: localPath,
       }),
       image: publicImage.optional(),
+      video: publicMedia.optional(),
       imageAlt: z.string().trim().max(500).optional(),
     }),
   ).max(500),
@@ -73,9 +103,10 @@ export const siteContentCollectionSchemas = {
     z.object({
       title: z.string().trim().min(1).max(160),
       category: z.string().trim().min(1).max(160),
-      image: publicImage,
+      image: publicImage.optional(),
+      video: publicMedia.optional(),
       alt: z.string().trim().max(500),
-    }),
+    }).refine((item) => item.image || item.video, "Provide an image or video for every gallery item."),
   ).max(200),
   trustedBy: z.array(
     z.object({

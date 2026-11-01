@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ServiceVisual } from '@/components/service-visual';
 import { ArrowUpRight } from 'lucide-react';
-import { StudioShell, whatsapp } from '@/components/studio-shell';
+import { StudioShell, useConfiguredWhatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
 import { CmsPageBlock, CmsText } from '@/components/cms-sections';
 import { pageHead } from '@/lib/studio-utils';
@@ -53,20 +53,21 @@ function List({ sectionId, eyebrow, title, intro, items, outro }: { sectionId: s
 }
 
 function CreativeVisualsMotion() {
+  const whatsappUrl = useConfiguredWhatsapp();
   return <StudioShell>
     <CmsPageBlock sectionId="hero"><section className="inner-hero">
-      <span className="eyebrow">CREATIVE VISUALS & MOTION IN NAMIBIA</span>
-      <h1>Creative visuals &<br /><span>motion</span> that communicate,<br />not just decorate.</h1>
-      <p>Strategic creative visuals and motion graphics for businesses in Namibia — high-impact assets that make people stop, pay attention, and understand.</p>
+      <span className="eyebrow"><CmsText sectionId="hero" field="eyebrow">CREATIVE VISUALS & MOTION IN NAMIBIA</CmsText></span>
+      <h1><CmsText sectionId="hero" field="headingStart">Creative visuals &</CmsText><br /><span><CmsText sectionId="hero" field="headingAccent">motion</CmsText></span> <CmsText sectionId="hero" field="headingEnd">that communicate, not just decorate.</CmsText></h1>
+      <p><CmsText sectionId="hero" field="body">Strategic creative visuals and motion graphics for businesses in Namibia — high-impact assets that make people stop, pay attention, and understand.</CmsText></p>
       <div className="hero-actions">
-        <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Discuss your vision <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer"><CmsText sectionId="hero" field="buttonLabel">Discuss your vision</CmsText> <ArrowUpRight /></a></Button>
       </div>
     </section></CmsPageBlock>
 
     <CmsPageBlock sectionId="visual"><ServiceVisual kind="motion" /></CmsPageBlock>
     <CmsPageBlock sectionId="intro"><section className="sm-intro section-pad">
       <div className="sm-intro-grid">
-        <span className="eyebrow">GOOD VISUALS DO MORE THAN LOOK GOOD</span>
+        <span className="eyebrow"><CmsText sectionId="intro" field="eyebrow">GOOD VISUALS DO MORE THAN LOOK GOOD</CmsText></span>
         <div>
           <p><CmsText sectionId="intro" field="paragraph1">Good visuals don’t just look good. They make people stop, pay attention, and understand.</CmsText></p>
           <p><CmsText sectionId="intro" field="paragraph2">In fast-moving digital environments, static content is easy to ignore. Motion and strong visuals help brands communicate messages faster, clearer, and with stronger impact.</CmsText></p>
@@ -77,7 +78,7 @@ function CreativeVisualsMotion() {
 
     <CmsPageBlock sectionId="packages"><section className="sm-packages section-pad">
       <div className="section-heading reveal">
-        <span className="eyebrow">WHAT THIS SERVICE COVERS</span>
+        <span className="eyebrow"><CmsText sectionId="packages" field="eyebrow">WHAT THIS SERVICE COVERS</CmsText></span>
         <h2><CmsText sectionId="packages" field="headingStart">Built for</CmsText><br />the <span><CmsText sectionId="packages" field="headingEnd">campaign.</CmsText></span></h2>
         <p><CmsText sectionId="packages" field="body">Each creative project is built to support specific campaign objectives, platforms, and audience behavior.</CmsText></p>
         <p>Our Creative Visual & Motion Production may include:</p>
@@ -85,7 +86,7 @@ function CreativeVisualsMotion() {
       <div className="sm-package-grid is-single">
         <article className="sm-package">
           <div className="sm-package-body">
-            <ul>{covers.map(c => <li key={c.label}><strong>{c.label}</strong> — {c.text}</li>)}</ul>
+            <ul>{covers.map((c, i) => <li key={c.label}><strong><CmsText sectionId="packages" field={`item${i}Title`}>{c.label}</CmsText></strong> — <CmsText sectionId="packages" field={`item${i}Body`}>{c.text}</CmsText></li>)}</ul>
           </div>
         </article>
       </div>
@@ -98,7 +99,7 @@ function CreativeVisualsMotion() {
     <CmsPageBlock sectionId="approach"><section className="sm-faq section-pad">
       <div className="sm-faq-cta reveal">
         <p><CmsText sectionId="approach" field="body">Ready to make your brand move?</CmsText></p>
-        <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
       </div>
     </section></CmsPageBlock>
   </StudioShell>;

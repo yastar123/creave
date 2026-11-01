@@ -1,6 +1,4 @@
-import chromeAsset from "@/assets/crevora-chrome.jpg.asset.json";
-
-const chrome = chromeAsset.url;
+import chrome from "@/assets/hero-obsidian.webp";
 
 export const formatDate = (date: string) =>
   new Date(`${date}T00:00:00Z`).toLocaleDateString("en-GB", {

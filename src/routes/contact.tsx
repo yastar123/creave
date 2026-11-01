@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { ArrowUpRight, MessageCircle } from 'lucide-react';
 import * as z from 'zod';
-import { StudioShell, whatsapp } from '@/components/studio-shell';
+import { StudioShell, useStudioGlobals, whatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
 import { pageHead } from '@/lib/studio-utils';
 import { useSiteContent } from '@/lib/site-content-context';
@@ -31,7 +31,19 @@ export const Route = createFileRoute('/contact')({
 });
 
 function Contact() {
+  return <StudioShell><ContactPage /></StudioShell>;
+}
+
+function ContactPage() {
   const { services } = useSiteContent();
+  const { settings } = useStudioGlobals();
+  const contactEmail = settings["email"] || 'hello@crevora.co';
+  const contactPhone = settings["phone"] || '+264 81 578 1719';
+  const phoneHref = contactPhone.replace(/[^\d+]/g, '');
+  const configuredWhatsapp = settings["whatsapp"] ?? '';
+  const whatsappBase = /^https?:\/\//i.test(configuredWhatsapp)
+    ? configuredWhatsapp.split('?')[0] || whatsapp.split('?')[0] || whatsapp
+    : whatsapp.split('?')[0]!;
   const [form, setForm] = useState(() => ({ name: '', company: '', email: '', phone: '', interest: services[0]?.title ?? '', message: '', whatsappOk: true, privacyConsent: false }));
   const [hp, setHp] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -86,7 +98,7 @@ function Contact() {
         '',
         `Open to being contacted via WhatsApp: ${v.whatsappOk ? 'Yes' : 'No'}`,
       ].filter(Boolean).join('\n');
-      setWhatsappUrl(`https://wa.me/264815781719?text=${encodeURIComponent(text)}`);
+      setWhatsappUrl(`${whatsappBase}?text=${encodeURIComponent(text)}`);
       setStatus('sent');
     } catch {
       setSubmitError('We could not save your enquiry right now. Please try again shortly.');
@@ -94,7 +106,7 @@ function Contact() {
     }
   }
 
-  return <StudioShell>
+  return <>
     <CmsPageBlock sectionId="hero"><section className="inner-hero">
       <span className="eyebrow">CONTACT CREVORA</span>
       <h1><CmsText sectionId="hero" field="headingStart">Let’s talk about</CmsText><br /><CmsText sectionId="hero" field="headingEnd">your brand.</CmsText></h1>
@@ -118,12 +130,12 @@ function Contact() {
       <CmsPageBlock sectionId="details"><div className="contact-info">
         <h2><CmsText sectionId="details" field="headingStart">Chat via</CmsText><br /><CmsText sectionId="details" field="headingEnd">WhatsApp.</CmsText></h2>
         <div className="contact-links">
-          <a href="mailto:hello@crevora.co">hello@crevora.co <ArrowUpRight className="inline" size={18} /></a>
-          <a href="tel:+264815781719">+264 81 578 1719</a>
-          <span>Mon – Fri: 08:00 – 19:00</span>
-          <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer"><MessageCircle /> Chat via WhatsApp <ArrowUpRight /></a></Button>
+          <a href={`mailto:${contactEmail}`}>{contactEmail} <ArrowUpRight className="inline" size={18} /></a>
+          <a href={`tel:${phoneHref}`}>{contactPhone}</a>
+          <span>{settings["hours"] || 'Mon – Fri: 08:00 – 19:00'}</span>
+          <Button variant="studio" asChild><a href={whatsappBase} target="_blank" rel="noreferrer"><MessageCircle /> Chat via WhatsApp <ArrowUpRight /></a></Button>
         </div>
-        <p>Serving businesses across Namibia and international markets.</p>
+        <p>{settings["address"] || 'Serving businesses across Namibia and international markets.'}</p>
       </div></CmsPageBlock>
 
       <CmsPageBlock sectionId="form"><form className="contact-form" onSubmit={submit} noValidate>
@@ -163,5 +175,5 @@ function Contact() {
         {status === 'sent' && whatsappUrl && <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Continue to WhatsApp <ArrowUpRight /></a></Button>}
       </form></CmsPageBlock>
     </section>
-  </StudioShell>;
+  </>;
 }

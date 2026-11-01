@@ -115,6 +115,10 @@ describe("CMS PostgreSQL content collections", () => {
     fireEvent.change(screen.getByRole("combobox", { name: "Content collection" }), {
       target: { value: "articles" },
     });
+    fireEvent.click(screen.getByRole("button", { name: "New" }));
+    expect(await screen.findByRole("textbox", { name: "Image" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Video" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Image Alt" })).toBeInTheDocument();
     fireEvent.change(await screen.findByRole("textbox", { name: "Date" }), {
       target: { value: "not-a-date" },
     });
@@ -123,5 +127,40 @@ describe("CMS PostgreSQL content collections", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "One or more records do not match this collection.",
     );
+  });
+
+  it("provides image and video upload fields for each project gallery item", async () => {
+    setupCollections();
+    await screen.findByRole("heading", { name: "Content collections" });
+    fireEvent.change(screen.getByRole("combobox", { name: "Content collection" }), {
+      target: { value: "projects" },
+    });
+
+    expect(await screen.findByLabelText("Gallery item 1 image")).toBeInTheDocument();
+    expect(screen.getByLabelText("Gallery item 1 video")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add gallery item" })).toBeInTheDocument();
+  });
+
+  it("edits service package prices and inclusions with structured fields", async () => {
+    const { getContent } = setupCollections();
+    await screen.findByRole("heading", { name: "Content collections" });
+    fireEvent.click(screen.getByRole("button", { name: /web-solutions-namibia/ }));
+
+    expect(await screen.findByRole("textbox", { name: "Package 1 name" })).toHaveValue("Silver Website");
+    fireEvent.change(screen.getByRole("textbox", { name: "Package 1 price" }), {
+      target: { value: "N$ 1 000" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Package 1 features" }), {
+      target: { value: "Responsive design\nCMS training" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save record" }));
+
+    await screen.findByText("Saved to PostgreSQL");
+    const savedPackages = getContent().services.find((service) => service.to === "/web-solutions-namibia")?.packages;
+    expect(savedPackages?.[0]).toMatchObject({
+      name: "Silver Website",
+      price: "N$ 1 000",
+      features: ["Responsive design", "CMS training"],
+    });
   });
 });

@@ -1,15 +1,15 @@
 import type { SiteContent } from "./site-content-shared";
 
-import moraAsset from '@/assets/mora-brand.jpg.asset.json';
-const mora = moraAsset.url;
-import strideAsset from '@/assets/stride-campaign.jpg.asset.json';
-const stride = strideAsset.url;
-import chromeAsset from '@/assets/crevora-chrome.jpg.asset.json';
-const chrome = chromeAsset.url;
-import phoneAsset from '@/assets/social-phone.jpg.asset.json';
-const phone = phoneAsset.url;
-import posterAsset from '@/assets/identity-poster.jpg.asset.json';
-const poster = posterAsset.url;
+import socialVisual from "@/assets/svc-social.webp";
+import motionVisual from "@/assets/svc-motion.webp";
+import webVisual from "@/assets/svc-web.webp";
+import obsidianVisual from "@/assets/hero-obsidian.webp";
+
+const mora = obsidianVisual;
+const stride = webVisual;
+const chrome = obsidianVisual;
+const phone = socialVisual;
+const poster = motionVisual;
 
 export const gallery = [
   { title: 'Feed Studies', category: 'Short-form video', image: phone, alt: 'Smartphone showing a vertical fashion video beside a black sculpted stone' },
@@ -24,6 +24,76 @@ export const services = [
   { title: 'Brand Identity & Visual', to: '/brand-identity-namibia', menuNote: 'Logo systems, guidelines, rebranding', short: 'Brand Identity\n& Visual', description: 'We build or refine the visual identity of your business — logo systems, colour, typography direction, graphic elements and brand guidelines.', tags: ['Logo systems', 'Brand guidelines', 'Rebranding'], detail: 'A coherent identity applied across your business communication, designed to work wherever your brand shows up.' },
   { title: 'Creative Content & Motion', to: '/creative-visuals-motion-namibia', menuNote: 'Campaign assets, video and motion', short: 'Creative Content\n& Motion', description: 'Social media designs, campaign assets, short-form video, editing and motion graphics that help your brand communicate with more impact.', tags: ['Campaign assets', 'Video editing', 'Motion graphics'], detail: 'We shape creative concepts, visuals and motion around your story, audience and project scope.' },
   { title: 'Web & Digital Solutions', to: '/web-solutions-namibia', menuNote: 'Business websites and landing pages', short: 'Web & Digital\nSolutions', description: 'Business websites, landing pages and responsive digital solutions that give your brand a clear, professional home online.', tags: ['Business websites', 'Landing pages', 'Responsive design'], detail: 'Clear structure, intentional design and mobile-first development within the scope of each project.' },
+];
+export const defaultWebsitePackages = [
+  {
+    name: 'Silver Website',
+    price: 'N$ 12 900',
+    period: 'one-time',
+    description: 'A clean, professional website to build trust and help small businesses get online.',
+    features: [
+      'Complete Website Setup Up to 5 Pages (Home, About, Services, Contact, Portfolio/Projects)',
+      'Mobile & Tablet Responsive',
+      'Free Domain (.com, .net, .cc, .store) & secure hosting for 1 Year',
+      'Basic SEO Setup & Google Search Integration',
+      'Modern Design with Motion',
+      'SSL Certificate for secure browsing',
+      'WhatsApp Instant Chat, Email & Social Media Integration',
+      'Fast Loading Speed',
+      'Flexible, No-Lock-In Platforms',
+      '1 Premium Strategic Hero Banner',
+      'Easy Content Dashboard',
+      '30-Day Post-Launch Priority Support',
+      '2 Complimentary Content Refinements (within 30 days of launch)',
+    ],
+  },
+  {
+    name: 'Gold Growth',
+    price: 'N$ 18 900',
+    period: 'one-time',
+    featured: true,
+    badge: 'Most Popular',
+    description: 'For businesses ready to scale and turn their website into a marketing engine.',
+    features: [
+      'Complete Website Setup Up to 7 Pages',
+      'Professional Product/Service Catalog (Perfect for Car Dealers, Property Listings, or Portfolios)',
+      'Free Domain (.com, .net, .cc, .store) & secure hosting for 1 Year',
+      'Mobile & Tablet Responsive',
+      'Custom Business Email Setup (Up to 5 @yourbrand.com)',
+      'Automated ticketing system for professional customer service (If Required)',
+      'Website Live Chat Integration (If Required)',
+      'Real-Time Reporting Page',
+      'Full Website Copywriting',
+      'Advanced SEO Strategy & Google Search Integration',
+      'Modern Design with Interactive Elements & Advanced Motion Experience',
+      'SSL Certificate for secure browsing',
+      'WhatsApp Instant Chat, Email & Social Media Integration',
+      'Fast Loading Speed',
+      'Flexible, No-Lock-In Platforms',
+      '2 Premium Strategic Hero Banner',
+      'Easy Content Dashboard',
+      '60-Day Post-Launch Priority Support',
+      '3 Complimentary Content Refinements (within 30 days of launch)',
+    ],
+  },
+  {
+    name: 'Bespoke Web Solutions',
+    price: 'Price on request',
+    period: '',
+    description: 'Custom-built websites for businesses with complex needs and long-term growth goals.',
+    features: [
+      'Unlimited Pages & Sections',
+      'Unlimited Professional Email Accounts',
+      'Custom-Built Business Logic',
+      'Complex System Integration',
+      'Priority Security & Advanced Maintenance',
+      'Backup & Recovery Setup',
+      'Third-Party API & Software Connectivity',
+      'Custom Admin Training & Documentation',
+      'Future-Proof Scalable Architecture',
+      'Custom Marketplace & Platform Solutions',
+    ],
+  },
 ];
 export type Project = { slug: string; name: string; client: string; year: string; category: string; services: string[]; image: string; alt: string; title: string; description: string; challenge: string; approach: string; result: string; gallery: { image: string; alt: string }[] };
 // Placeholder portfolio content (dummy) until real case studies are supplied.

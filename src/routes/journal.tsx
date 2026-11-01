@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { formatDate, pageHead } from '@/lib/studio-utils';
 import { useSiteContent } from '@/lib/site-content-context';
 import { CmsPageBlock, CmsText } from '@/components/cms-sections';
+import { SiteMedia } from '@/components/site-media';
+import { useCmsPageSections } from '@/components/cms-sections';
+import { parseCmsMediaOverrides, resolveCmsMedia } from '@/lib/cms-media-overrides';
 
 const PER_PAGE = 6;
 type Search = { category?: string | undefined; page?: number | undefined };
@@ -21,11 +24,14 @@ export const Route = createFileRoute('/journal')({
 function Journal() {
   const { category, page = 1 } = Route.useSearch();
   const { articles } = useSiteContent();
+  const sections = useCmsPageSections();
+  const overrides = parseCmsMediaOverrides(sections.find(section => section.id === 'articles')?.fields["mediaItems"]);
   const journalCategories = Array.from(new Set(articles.map((article) => article.category)));
   const filtered = category ? articles.filter(a => a.category === category) : articles;
   const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const current = Math.min(page, pages);
-  const list = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
+  const list = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE)
+    .map(article => resolveCmsMedia(article, [article.slug, article.title], overrides));
 
   return <StudioShell>
     <CmsPageBlock sectionId="hero"><section className="inner-hero"><span className="eyebrow">THINKING OUT LOUD</span><h1><CmsText sectionId="hero" field="headingStart">Ideas worth</CmsText><br /><CmsText sectionId="hero" field="headingEnd">a closer look.</CmsText></h1><p><CmsText sectionId="hero" field="body">Observations, useful questions and fresh perspectives on building brands that connect.</CmsText></p></section></CmsPageBlock>
@@ -36,7 +42,7 @@ function Journal() {
       </nav>
       {list.length === 0 ? <p className="journal-empty">No articles in this category yet.</p> :
         <div className="journal-grid">{list.map(a => <article className="journal-item" key={a.slug}>
-          <Link to="/journal/$slug" params={{ slug: a.slug }} className="journal-cover" tabIndex={-1} aria-hidden="true"><img src={a.image} alt="" width={1440} height={1088} loading="lazy" /></Link>
+          <Link to="/journal/$slug" params={{ slug: a.slug }} className="journal-cover" tabIndex={-1} aria-hidden="true"><SiteMedia src={a.image} video={a.video} alt="" loading="lazy" /></Link>
           <div className="journal-meta"><span>{a.category}</span><time dateTime={a.date}>{formatDate(a.date)}</time></div>
           <Button variant="nav" className="journal-title" asChild><Link to="/journal/$slug" params={{ slug: a.slug }}>{a.title}<ArrowUpRight /></Link></Button>
           <p className="journal-excerpt">{a.excerpt}</p>

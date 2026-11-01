@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { CmsPage, CmsSection } from "./cms-shared";
+import type { CmsGlobals } from "./cms-shared";
 import type { SiteContent, SiteContentCollection } from "./site-content-shared";
+
+export type { CmsGlobals } from "./cms-shared";
 
 export type CmsPageRecord = CmsPage & {
   isCustom: boolean;
@@ -13,9 +16,12 @@ export type PublicCmsPage = Pick<CmsPage, "id" | "title" | "route"> & {
   isCustom: boolean;
 };
 
-export type CmsGlobals = {
-  navbar: Record<string, string>;
-  footer: Record<string, string>;
+export type CmsMediaAsset = {
+  url: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  uploadedAt: string;
 };
 
 export type CmsInquiry = {
@@ -44,7 +50,7 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
     ...init,
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
+      ...(init?.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
       ...init?.headers,
     },
   });
@@ -78,6 +84,32 @@ export function useAdminSiteContent(enabled = true) {
     queryFn: () => requestJson<{ content: CmsSiteContent }>("/api/cms/admin/collections"),
     retry: false,
     enabled,
+  });
+}
+
+export function useAdminMedia(enabled = true) {
+  return useQuery({
+    queryKey: ["cms", "admin", "media"],
+    queryFn: () => requestJson<{ assets: CmsMediaAsset[] }>("/api/cms/admin/media"),
+    retry: false,
+    enabled,
+  });
+}
+
+export function useUploadCmsMedia() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.set("file", file);
+      return requestJson<{ asset: CmsMediaAsset }>("/api/cms/admin/media", {
+        method: "POST",
+        body: formData,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["cms", "admin", "media"] });
+    },
   });
 }
 
@@ -185,7 +217,7 @@ export function useDeleteCmsPage() {
 export function useSaveCmsGlobal() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ key, content }: { key: "navbar" | "footer"; content: Record<string, string> }) =>
+    mutationFn: ({ key, content }: { key: "navbar" | "footer" | "settings"; content: Record<string, string> }) =>
       requestJson<{ ok: true; content: Record<string, string> }>(
         `/api/cms/admin/globals/${key}`,
         { method: "PUT", body: JSON.stringify({ content }) },

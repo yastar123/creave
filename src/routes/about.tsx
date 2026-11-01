@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowUpRight } from 'lucide-react';
-import { StudioShell, whatsapp } from '@/components/studio-shell';
+import { StudioShell, useConfiguredWhatsapp } from '@/components/studio-shell';
 import { StudioGallery } from '@/components/studio-gallery';
 import { Button } from '@/components/ui/button';
 import { CmsPageBlock, CmsText } from '@/components/cms-sections';
@@ -18,13 +18,14 @@ export const Route = createFileRoute('/about')({
 });
 
 function About() {
+  const whatsappUrl = useConfiguredWhatsapp();
   return <StudioShell>
     <CmsPageBlock sectionId="hero"><section className="inner-hero">
       <span className="eyebrow">ABOUT CREVORA</span>
       <h1><CmsText sectionId="hero" field="headlineStart">Building brands</CmsText><br />people <span><CmsText sectionId="hero" field="headlineAccent">trust,</CmsText></span><br /><CmsText sectionId="hero" field="headlineEnd">remember, and choose.</CmsText></h1>
       <p><CmsText sectionId="hero" field="body">Branding isn’t about being loud. It’s about clarity, consistency, and being the brand people choose when it matters.</CmsText></p>
       <div className="hero-actions">
-        <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer"><CmsText sectionId="hero" field="buttonLabel">Start a conversation</CmsText> <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer"><CmsText sectionId="hero" field="buttonLabel">Start a conversation</CmsText> <ArrowUpRight /></a></Button>
       </div>
     </section></CmsPageBlock>
 
@@ -52,4 +53,3 @@ function About() {
     <CmsPageBlock sectionId="gallery"><StudioGallery /></CmsPageBlock>
   </StudioShell>;
 }
-

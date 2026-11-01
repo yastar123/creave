@@ -4,6 +4,9 @@ import { StudioShell } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/studio-utils';
 import { useSiteContent } from '@/lib/site-content-context';
+import { SiteMedia } from '@/components/site-media';
+import { useCmsPageSections } from '@/components/cms-sections';
+import { parseCmsMediaOverrides, resolveCmsMedia } from '@/lib/cms-media-overrides';
 
 export const Route = createFileRoute('/journal_/$slug')({
   loader: ({ params, context }) => {
@@ -27,11 +30,14 @@ export const Route = createFileRoute('/journal_/$slug')({
 function ArticlePage() {
   const { article: a } = Route.useLoaderData();
   const { articles } = useSiteContent();
+  const sections = useCmsPageSections();
+  const overrides = parseCmsMediaOverrides(sections.find(section => section.id === 'hero')?.fields["mediaItems"]);
+  const article = resolveCmsMedia(a, [a.slug, a.title], overrides);
   const related = [...articles.filter(x => x.slug !== a.slug && x.category === a.category), ...articles.filter(x => x.slug !== a.slug && x.category !== a.category)].slice(0, 2);
   return <StudioShell>
     <article>
       <header className="inner-hero article-hero"><Link to="/journal" className="article-back"><ArrowLeft size={14} /> Journal</Link><span className="eyebrow">{a.category} / <time dateTime={a.date}>{formatDate(a.date)}</time> / {a.author}</span><h1>{a.title}</h1><p>{a.excerpt}</p></header>
-      {a.image && <figure className="article-cover"><img src={a.image} alt={a.imageAlt ?? ''} width={1440} height={1088} /></figure>}
+      {(article.image || article.video) && <figure className="article-cover"><SiteMedia src={article.image} video={article.video} alt={article.imageAlt ?? ''} /></figure>}
       <div className="article-body section-pad">{a.body.map((p, i) => <p key={i}>{p}</p>)}
         <aside className="article-cta"><span className="eyebrow">Related service</span><Link to={a.related.to} className="text-cta">{a.related.label} <ArrowUpRight /></Link><Button variant="studio" asChild><Link to="/contact">Let’s talk about your brand <ArrowUpRight /></Link></Button></aside>
       </div>

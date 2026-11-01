@@ -1,4 +1,4 @@
-import { cmsSectionTypes } from "./cms-shared";
+import { cmsGlobalKeys, cmsSectionTypes } from "./cms-shared";
 import type { CmsSection } from "./cms-shared";
 import type { CmsGlobals } from "./cms-client";
 
@@ -38,9 +38,10 @@ export function isCmsPreviewUpdate(value: unknown): value is CmsPreviewUpdate {
   if (!isRecord(value) || value["type"] !== CMS_PREVIEW_MESSAGE || typeof value["pageId"] !== "string") return false;
   if (value["sections"] !== undefined && (!Array.isArray(value["sections"]) || !value["sections"].every(isSection))) return false;
   if (value["globals"] !== undefined) {
-    if (!isRecord(value["globals"])
-      || !isStringRecord(value["globals"]["navbar"])
-      || !isStringRecord(value["globals"]["footer"])) return false;
+    const globals = value["globals"];
+    if (!isRecord(globals) || !cmsGlobalKeys.every((key) => isStringRecord(globals[key]))) {
+      return false;
+    }
   }
   return true;
 }

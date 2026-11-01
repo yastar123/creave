@@ -12,7 +12,7 @@
 .ca-record-button { display: grid; width: 100%; gap: 5px; padding: 11px 13px; border: 0; border-bottom: 1px solid #eeefeb; background: #fff; color: #383d36; text-align: left; cursor: pointer; }
 .ca-record-button:hover { background: #f6f7f1; }
 .ca-record-button.is-active { background: #eff1e7; box-shadow: inset 3px 0 #75865a; }
-.ca-record-button > span { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.ca-record-button > span { font-size: 11px; overflow-wrap: anywhere; }
 .ca-record-button small { color: #8b9087; font: 8px ui-monospace, SFMono-Regular, monospace; }
 .ca-record-empty { margin: 0; padding: 20px 13px; color: #83887f; font-size: 11px; line-height: 1.6; }
 .ca-record-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px; border-bottom: 1px solid var(--ca-soft-line); background: #fafaf7; }
@@ -30,6 +30,33 @@
 .ca-record-field input, .ca-record-field textarea { width: 100%; min-height: 36px; padding: 8px 9px; outline: none; border: 1px solid #dedfd9; background: #fff; color: #292c28; font: 11px/1.55 'Geist', ui-sans-serif, sans-serif; letter-spacing: 0; }
 .ca-record-field input:focus, .ca-record-field textarea:focus { border-color: #777f6c; box-shadow: 0 0 0 2px #d5f15b45; }
 .ca-record-field textarea { min-height: 72px; resize: vertical; }
+.ca-nested-gallery { display: grid; gap: 12px; }
+.ca-nested-gallery-item { display: grid; gap: 12px; min-width: 0; margin: 0; padding: 13px; border: 1px solid var(--ca-line); }
+.ca-nested-gallery-item legend, .ca-nested-gallery-item label > span { color: #777d74; font: 9px ui-monospace, SFMono-Regular, monospace; letter-spacing: .04em; }
+.ca-nested-gallery-item label { display: grid; gap: 6px; min-width: 0; }
+.ca-nested-gallery-item input { width: 100%; min-height: 36px; padding: 8px 9px; border: 1px solid #dedfd9; background: #fff; color: #292c28; font: 11px/1.55 'Geist', ui-sans-serif, sans-serif; }
+.ca-nested-gallery-item input:focus { outline: none; border-color: #777f6c; box-shadow: 0 0 0 2px #d5f15b45; }
+.ca-nested-gallery-item .ca-button { justify-self: start; }
+.ca-nested-gallery details { display: grid; gap: 8px; color: #777d74; font-size: 10px; }
+.ca-nested-gallery summary { cursor: pointer; }
+.ca-nested-gallery textarea { width: 100%; min-height: 120px; padding: 8px 9px; border: 1px solid #dedfd9; background: #fff; color: #292c28; font: 11px/1.55 'Geist', ui-sans-serif, sans-serif; }
+.ca-nested-packages { display: grid; gap: 12px; }
+.ca-nested-packages > p { margin: 0; color: #777d74; font: 10px/1.5 'Geist', ui-sans-serif, sans-serif; letter-spacing: 0; }
+.ca-nested-package { display: grid; gap: 10px; min-width: 0; margin: 0; padding: 13px; border: 1px solid var(--ca-line); }
+.ca-nested-package legend, .ca-nested-package label > span { color: #777d74; font: 9px ui-monospace, SFMono-Regular, monospace; letter-spacing: .04em; }
+.ca-nested-package label { display: grid; gap: 6px; min-width: 0; }
+.ca-nested-package label > span { display: flex; justify-content: space-between; gap: 8px; }
+.ca-nested-package input, .ca-nested-package textarea { width: 100%; min-height: 36px; padding: 8px 9px; border: 1px solid #dedfd9; background: #fff; color: #292c28; font: 11px/1.55 'Geist', ui-sans-serif, sans-serif; letter-spacing: 0; }
+.ca-nested-package input:focus, .ca-nested-package textarea:focus { outline: none; border-color: #777f6c; box-shadow: 0 0 0 2px #d5f15b45; }
+.ca-nested-package textarea { min-height: 72px; resize: vertical; }
+.ca-nested-package .ca-package-featured { display: flex; align-items: center; gap: 8px; }
+.ca-nested-package .ca-package-featured input { width: 14px; min-height: 14px; margin: 0; accent-color: #6f8053; }
+.ca-nested-package .ca-package-featured span { color: #777d74; font: 10px 'Geist', ui-sans-serif, sans-serif; letter-spacing: 0; }
+.ca-nested-package em { color: #9a9e97; font: 8px 'Geist', ui-sans-serif, sans-serif; letter-spacing: 0; }
+.ca-nested-package .ca-button { justify-self: start; }
+.ca-nested-packages details { display: grid; gap: 8px; color: #777d74; font-size: 10px; }
+.ca-nested-packages summary { cursor: pointer; }
+.ca-nested-packages details textarea { width: 100%; min-height: 120px; padding: 8px 9px; border: 1px solid #dedfd9; background: #fff; color: #292c28; font: 11px/1.55 'Geist', ui-sans-serif, sans-serif; }
 .ca-collection-feedback, .ca-collection-unsaved { display: flex; grid-column: 1 / -1; align-items: center; gap: 7px; margin: 0; color: #617246; font-size: 10px; }
 .ca-collection-feedback.is-error { color: #a34639; line-height: 1.6; }
 .ca-collection-unsaved { color: #8a6a2e; }

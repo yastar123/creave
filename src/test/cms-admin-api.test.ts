@@ -5,6 +5,7 @@ import type { Pool } from "pg";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { registerCmsRoutes } from "../../server/cms";
+import { defaultCmsGlobals } from "@/lib/cms-shared";
 
 const testAdminEmail = "cms-admin@example.test";
 const testSessionSecret = "test-only-cms-api-session-secret";
@@ -338,6 +339,7 @@ describe("CMS admin page, shared-content, and inbox APIs", () => {
     expect((await read.json()).globals).toEqual({
       navbar: { logo: "CREVORA" },
       footer: {},
+      settings: defaultCmsGlobals.settings,
     });
 
     const save = await fetch(`${origin}/api/cms/admin/globals/navbar`, {
@@ -353,6 +355,15 @@ describe("CMS admin page, shared-content, and inbox APIs", () => {
       logo: "CREVORA Studio",
       contact: "/contact",
     });
+
+    const saveSettings = await fetch(`${origin}/api/cms/admin/globals/settings`, {
+      method: "PUT",
+      headers: adminHeaders,
+      body: JSON.stringify({ content: { ...defaultCmsGlobals.settings, email: "studio@example.test" } }),
+    });
+    expect(saveSettings.status).toBe(200);
+    const savedSettings = await fetch(`${origin}/api/cms/public-globals`);
+    expect((await savedSettings.json()).globals.settings.email).toBe("studio@example.test");
 
     const invalidContent = await fetch(`${origin}/api/cms/admin/globals/footer`, {
       method: "PUT",

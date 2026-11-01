@@ -4,7 +4,11 @@ import { ArrowUpRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useSiteContent } from '@/lib/site-content-context';
-import { whatsapp } from '@/components/studio-shell';
+import { CmsText, useCmsPageSections } from '@/components/cms-sections';
+import { useConfiguredWhatsapp } from '@/components/studio-shell';
+import { SiteImage } from '@/components/site-image';
+import { SiteMedia } from '@/components/site-media';
+import { parseCmsMediaOverrides, resolveCmsMedia } from '@/lib/cms-media-overrides';
 import svcSocial from '@/assets/svc-social.webp';
 import svcMotion from '@/assets/svc-motion.webp';
 import svcWeb from '@/assets/svc-web.webp';
@@ -46,7 +50,12 @@ export function ManifestoSection() {
 export function StackedWork() {
   const [selected, setSelected] = useState<number | null>(null);
   const { projects, gallery } = useSiteContent();
-  const list = [...projects, ...(gallery[0] ? [{ name: 'FEED STUDIES', category: 'Short-form video', image: gallery[0].image, alt: gallery[0].alt, title: 'Vertical stories, made to be watched twice.', description: 'A self-initiated short-form series exploring hooks, pacing and product storytelling for Reels and TikTok.' }] : [])];
+  const sections = useCmsPageSections();
+  const workSection = sections.find(section => section.id === 'work')?.fields;
+  const projectOverrides = parseCmsMediaOverrides(workSection?.["mediaItems"]);
+  const coverImage = workSection?.["coverImage"];
+  const coverVideo = workSection?.["coverVideo"];
+  const list = [...projects.map(project => resolveCmsMedia(project, [project.slug, project.name], projectOverrides)), ...(gallery[0] ? [resolveCmsMedia({ name: 'FEED STUDIES', category: 'Short-form video', image: gallery[0].image, video: gallery[0].video, alt: gallery[0].alt, title: 'Vertical stories, made to be watched twice.', description: 'A self-initiated short-form series exploring hooks, pacing and product storytelling for Reels and TikTok.' }, ['FEED STUDIES', gallery[0].title], projectOverrides)] : [])];
   const project = selected === null ? null : list[selected];
   const wrap = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -69,26 +78,30 @@ export function StackedWork() {
     return () => { window.removeEventListener('scroll', on); cancelAnimationFrame(raf); };
   }, []);
   return <section className="sw-section" id="selected-work">
-    <div className="sw-head"><span className="eyebrow">(02) — Selected work</span><h2 className="split-title"><span>Different</span> <em>by design.</em></h2><Link to="/social-media-management-namibia" className="text-cta">All social work <ArrowUpRight /></Link></div>
+    {(coverImage || coverVideo) && <div className="sw-section-cover" aria-hidden="true"><SiteMedia src={coverImage} video={coverVideo} alt="" /></div>}
+    <div className="sw-head"><span className="eyebrow">{workSection?.["eyebrow"] ?? '(02) — Selected work'}</span><h2 className="split-title"><span>{workSection?.["headingStart"] ?? 'Different'}</span> <em>{workSection?.["headingAccent"] ?? 'by design.'}</em></h2><Link to="/social-media-management-namibia" className="text-cta">{workSection?.["buttonLabel"] ?? 'All social work'} <ArrowUpRight /></Link></div>
     <div ref={wrap} className="sw-stack">{list.map((p, i) => <article key={p.name} className="sw-card" style={{ top: `calc(80px + ${i * 22}px)` }}>
-      <button type="button" className="sw-media" data-cursor="view" onClick={() => setSelected(i)} aria-label={`View ${p.name} project`}><img src={p.image} alt={p.alt} loading="lazy" width={1440} height={1088} /></button>
+      <button type="button" className="sw-media" data-cursor="view" onClick={() => setSelected(i)} aria-label={`View ${p.name} project`}><SiteMedia src={p.image} video={p.video} alt={p.alt} loading="lazy" /></button>
       <div className="sw-info"><span className="sw-index">{String(i + 1).padStart(2, '0')}/{String(list.length).padStart(2, '0')}</span><h3>{p.name}</h3><span className="sw-cat">{p.category}</span><span className="sw-year">Concept · 2026</span></div>
     </article>)}</div>
-    <Dialog open={selected !== null} onOpenChange={o => { if (!o) setSelected(null); }}><DialogContent className="project-dialog">{project && <><img src={list[selected!]!.image} alt={list[selected!]!.alt} /><div className="project-dialog-text"><span className="eyebrow">{list[selected!]!.category} / CONCEPT PROJECT</span><DialogTitle>{list[selected!]!.title}</DialogTitle><DialogDescription>{list[selected!]!.description}</DialogDescription><Button variant="studio" asChild><Link to="/contact">Create something together <ArrowUpRight /></Link></Button></div></>}</DialogContent></Dialog>
+    <Dialog open={selected !== null} onOpenChange={o => { if (!o) setSelected(null); }}><DialogContent className="project-dialog">{project && <><SiteMedia src={list[selected!]!.image} video={list[selected!]!.video} alt={list[selected!]!.alt} /><div className="project-dialog-text"><span className="eyebrow">{list[selected!]!.category} / CONCEPT PROJECT</span><DialogTitle>{list[selected!]!.title}</DialogTitle><DialogDescription>{list[selected!]!.description}</DialogDescription><Button variant="studio" asChild><Link to="/contact">Create something together <ArrowUpRight /></Link></Button></div></>}</DialogContent></Dialog>
   </section>;
 }
 
 /** Bold, image-led service cards so visitors instantly see what CREVORA does. */
 export function ServiceShowcase() {
   const { services, gallery } = useSiteContent();
-  const imgs = [svcSocial, gallery[2]?.image ?? gallery[0]?.image, svcMotion, svcWeb];
+  const sections = useCmsPageSections();
+  const serviceOverrides = parseCmsMediaOverrides(sections.find(section => section.id === 'showcase')?.fields["mediaItems"]);
+  const fallbackImages = [svcSocial, gallery[2]?.image ?? gallery[0]?.image, svcMotion, svcWeb];
   const chips = [['♥ 1.2K', 'Reels · TikTok'], ['Aa', 'Logo · Colour'], ['● REC', '4K · Motion'], ['98', 'Speed score']];
   return <section className="ss-section" id="services">
-    <div className="ss-head"><span className="eyebrow">(03) — What we do</span><h2>Four services.<br /><em>One clear direction.</em></h2><Link to="/services" className="studio-button studio-button-outline inline-flex items-center">All services <ArrowUpRight size={16} /></Link></div>
+    <div className="ss-head"><span className="eyebrow">(03) — What we do</span><h2><CmsText sectionId="showcase" field="heading">Four services. One clear direction.</CmsText></h2><Link to="/services" className="studio-button studio-button-outline inline-flex items-center">All services <ArrowUpRight size={16} /></Link></div>
     <div className="ss-grid">{services.map((s, i) => {
+      const service = resolveCmsMedia(s, [s.to, s.title], serviceOverrides);
       const chip = chips[i] ?? [s.tags[0] ?? s.title, s.tags.slice(1, 3).join(' · ')];
       return <Link key={s.title} to={s.to} className={`ss-card ss-card-${i}`}>
-      {imgs[i] && <img src={imgs[i]} alt="" loading="lazy" width={1200} height={1200} />}
+      {(service.image || service.video || fallbackImages[i]) && <SiteMedia src={service.image || fallbackImages[i]} video={service.video} alt="" loading="lazy" />}
       <span className="ss-shade" />
       <span className="ss-top"><span className="ss-num">0{i + 1}</span>{i === 0 ? <span className="ss-pill">Core focus</span> : <span className="ss-pill">{chip[1]}</span>}</span>
       <span className="ss-float" aria-hidden="true">{chip[0]}</span>
@@ -100,11 +113,12 @@ export function ServiceShowcase() {
 
 /** Closing statement with giant marquee type. */
 export function BigCta() {
+  const whatsappUrl = useConfiguredWhatsapp();
   return <section className="bc-section">
     <span className="eyebrow">(06) — Next</span>
-    <a href={whatsapp} target="_blank" rel="noreferrer" className="bc-marquee" aria-label="Start a project on WhatsApp">
+    <a href={whatsappUrl} target="_blank" rel="noreferrer" className="bc-marquee" aria-label="Start a project on WhatsApp">
       <span className="bc-track">{[0, 1].map(k => <span key={k} aria-hidden="true">No noise. Just strategy that works <i>✺</i> No noise. Just strategy that works <i>✺</i> </span>)}</span>
     </a>
-    <div className="bc-foot"><p>We focus on clarity, direction, and execution so your brand isn’t just visible, but truly chosen. Tell us about it — we reply within one working day.</p><div className="bc-actions"><Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">WhatsApp us <ArrowUpRight /></a></Button><Link to="/contact" className="text-cta">Or send a brief <ArrowUpRight /></Link></div></div>
+    <div className="bc-foot"><p>We focus on clarity, direction, and execution so your brand isn’t just visible, but truly chosen. Tell us about it — we reply within one working day.</p><div className="bc-actions"><Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">WhatsApp us <ArrowUpRight /></a></Button><Link to="/contact" className="text-cta">Or send a brief <ArrowUpRight /></Link></div></div>
   </section>;
 }

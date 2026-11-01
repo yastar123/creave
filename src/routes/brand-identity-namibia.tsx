@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ServiceVisual } from '@/components/service-visual';
 import { ArrowUpRight } from 'lucide-react';
-import { StudioShell, whatsapp } from '@/components/studio-shell';
+import { StudioShell, useConfiguredWhatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
 import { CmsPageBlock, CmsText } from '@/components/cms-sections';
 import { pageHead } from '@/lib/studio-utils';
@@ -58,20 +58,21 @@ function List({ sectionId, eyebrow, title, intro, items, outro }: { sectionId: s
 }
 
 function BrandIdentity() {
+  const whatsappUrl = useConfiguredWhatsapp();
   return <StudioShell>
     <CmsPageBlock sectionId="hero"><section className="inner-hero">
-      <span className="eyebrow">BRAND IDENTITY & VISUAL SYSTEMS IN NAMIBIA</span>
-      <h1>Brand identity &<br /><span>visual systems</span> for business.</h1>
-      <p>Crevora helps businesses in Namibia build clear, consistent, and scalable brand identity systems that support long-term growth.</p>
+      <span className="eyebrow"><CmsText sectionId="hero" field="eyebrow">BRAND IDENTITY & VISUAL SYSTEMS IN NAMIBIA</CmsText></span>
+      <h1><CmsText sectionId="hero" field="headingStart">Brand identity &</CmsText><br /><span><CmsText sectionId="hero" field="headingAccent">visual systems</CmsText></span> <CmsText sectionId="hero" field="headingEnd">for business.</CmsText></h1>
+      <p><CmsText sectionId="hero" field="body">Crevora helps businesses in Namibia build clear, consistent, and scalable brand identity systems that support long-term growth.</CmsText></p>
       <div className="hero-actions">
-        <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Request a private discussion <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer"><CmsText sectionId="hero" field="buttonLabel">Request a private discussion</CmsText> <ArrowUpRight /></a></Button>
       </div>
     </section></CmsPageBlock>
 
     <CmsPageBlock sectionId="visual"><ServiceVisual kind="identity" /></CmsPageBlock>
     <CmsPageBlock sectionId="intro"><section className="sm-intro section-pad">
       <div className="sm-intro-grid">
-        <span className="eyebrow">CREVORA — STRATEGIC CREATIVE AGENCY</span>
+        <span className="eyebrow"><CmsText sectionId="intro" field="eyebrow">CREVORA — STRATEGIC CREATIVE AGENCY</CmsText></span>
         <div>
           <p><CmsText sectionId="intro" field="paragraph1">A strong brand identity is not just about logos or colors.</CmsText></p>
           <p><CmsText sectionId="intro" field="paragraph2">It is a strategic foundation that shapes how your business is perceived, trusted, and remembered across every touchpoint.</CmsText></p>
@@ -88,7 +89,7 @@ function BrandIdentity() {
     <CmsPageBlock sectionId="approach"><section className="sm-faq section-pad">
       <div className="sm-faq-cta reveal">
         <p><CmsText sectionId="approach" field="body">Ready to build a brand that lasts?</CmsText></p>
-        <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
       </div>
     </section></CmsPageBlock>
   </StudioShell>;

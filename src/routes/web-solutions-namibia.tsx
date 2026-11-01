@@ -2,81 +2,12 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { ServiceVisual } from '@/components/service-visual';
 import { useState } from 'react';
 import { ArrowUpRight, Plus, Minus } from 'lucide-react';
-import { StudioShell, whatsapp } from '@/components/studio-shell';
+import { StudioShell, useConfiguredWhatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
 import { CmsPageBlock, CmsText } from '@/components/cms-sections';
 import { pageHead } from '@/lib/studio-utils';
-
-const packages = [
-  {
-    tier: 'Silver Website',
-    price: 'N$ 12 900',
-    period: 'one-time',
-    note: 'A clean, professional website to build trust and help small businesses get online.',
-    features: [
-      'Complete Website Setup Up to 5 Pages (Home, About, Services, Contact, Portfolio/Projects)',
-      'Mobile & Tablet Responsive',
-      'Free Domain (.com, .net, .cc, .store) & secure hosting for 1 Year',
-      'Basic SEO Setup & Google Search Integration',
-      'Modern Design with Motion',
-      'SSL Certificate for secure browsing',
-      'WhatsApp Instant Chat, Email & Social Media Integration',
-      'Fast Loading Speed',
-      'Flexible, No-Lock-In Platforms',
-      '1 Premium Strategic Hero Banner',
-      'Easy Content Dashboard',
-      '30-Day Post-Launch Priority Support',
-      '2 Complimentary Content Refinements (within 30 days of launch)',
-    ],
-  },
-  {
-    tier: 'Gold Growth',
-    price: 'N$ 18 900',
-    period: 'one-time',
-    featured: true,
-    badge: 'Most Popular',
-    note: 'For businesses ready to scale and turn their website into a marketing engine.',
-    features: [
-      'Complete Website Setup Up to 7 Pages',
-      'Professional Product/Service Catalog (Perfect for Car Dealers, Property Listings, or Portfolios)',
-      'Free Domain (.com, .net, .cc, .store) & secure hosting for 1 Year',
-      'Mobile & Tablet Responsive',
-      'Custom Business Email Setup (Up to 5 @yourbrand.com)',
-      'Automated ticketing system for professional customer service (If Required)',
-      'Website Live Chat Integration (If Required)',
-      'Real-Time Reporting Page',
-      'Full Website Copywriting',
-      'Advanced SEO Strategy & Google Search Integration',
-      'Modern Design with Interactive Elements & Advanced Motion Experience',
-      'SSL Certificate for secure browsing',
-      'WhatsApp Instant Chat, Email & Social Media Integration',
-      'Fast Loading Speed',
-      'Flexible, No-Lock-In Platforms',
-      '2 Premium Strategic Hero Banner',
-      'Easy Content Dashboard',
-      '60-Day Post-Launch Priority Support',
-      '3 Complimentary Content Refinements (within 30 days of launch)',
-    ],
-  },
-  {
-    tier: 'Bespoke Web Solutions',
-    price: 'Price on request',
-    period: '',
-    note: 'Custom-built websites for businesses with complex needs and long-term growth goals.',
-    features: [
-      'Unlimited Pages & Sections',
-      'Unlimited Professional Email Accounts',
-      'Custom-Built Business Logic',
-      'Complex System Integration',
-      'Priority Security & Advanced Maintenance',
-      'Backup & Recovery Setup',
-      'Third-Party API & Software Connectivity',
-      'Custom Admin Training & Documentation',
-      'Future-Proof Scalable Architecture',
-      'Custom Marketplace & Platform Solutions',
-    ],
-  },
-];
+import { useSiteContent } from '@/lib/site-content-context';
+import { defaultWebsitePackages } from '@/lib/studio-content';
 
 const faqs = [
   {
@@ -112,13 +43,17 @@ export const Route = createFileRoute('/web-solutions-namibia')({
 
 function Web() {
   const [active, setActive] = useState<number | null>(0);
+  const { services } = useSiteContent();
+  const whatsappUrl = useConfiguredWhatsapp();
+  const websiteService = services.find(service => service.to === '/web-solutions-namibia');
+  const packages = websiteService?.packages ?? defaultWebsitePackages;
   return <StudioShell>
     <CmsPageBlock sectionId="hero"><section className="inner-hero">
       <span className="eyebrow">BUSINESS WEBSITE DESIGN & DEVELOPMENT IN NAMIBIA</span>
       <h1><CmsText sectionId="hero" field="headingStart">Websites that build</CmsText><br /><span><CmsText sectionId="hero" field="headingAccent">trust</CmsText></span> <CmsText sectionId="hero" field="headingEnd">— and business.</CmsText></h1>
       <p><CmsText sectionId="hero" field="body">A business website is not just an online presence. It is where trust is built, credibility is proven, and real decisions are made.</CmsText></p>
       <div className="hero-actions">
-        <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer"><CmsText sectionId="hero" field="buttonLabel">Request a private discussion</CmsText> <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer"><CmsText sectionId="hero" field="buttonLabel">Request a private discussion</CmsText> <ArrowUpRight /></a></Button>
       </div>
     </section></CmsPageBlock>
 
@@ -140,21 +75,21 @@ function Web() {
         <h2><CmsText sectionId="packages" field="headingStart">Choose the site</CmsText><br /><CmsText sectionId="packages" field="headingEnd">your business deserves.</CmsText></h2>
         <p><CmsText sectionId="packages" field="body">All website packages are strategy-led and tailored to each business’s goals, structure, and audience journey. All plans exclude VAT.</CmsText></p>
       </div>
-      <div className="sm-package-grid">
-        {packages.map((pkg, i) => <article className={`sm-package ${pkg.featured ? 'is-featured' : ''}`} key={pkg.tier}>
+      {packages.length ? <div className="sm-package-grid">
+        {packages.map((pkg, i) => <article className={`sm-package ${pkg.featured ? 'is-featured' : ''}`} key={pkg.name}>
           {pkg.badge && <span className="sm-package-badge">{pkg.badge}</span>}
           <div className="sm-package-head">
-            <span className="sm-package-tier">0{i + 1} / {pkg.tier}</span>
+            <span className="sm-package-tier">0{i + 1} / {pkg.name}</span>
             <div className="sm-package-price"><strong>{pkg.price}</strong>{pkg.period && <span>{pkg.period}</span>}</div>
-            <p>{pkg.note}</p>
+            <p>{pkg.description}</p>
           </div>
           <div className="sm-package-body">
             <span className="sm-package-label">What you get</span>
             <ul>{pkg.features.map(f => <li key={f}>{f}</li>)}</ul>
-            <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Request private discussion <ArrowUpRight /></a></Button>
+            <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Request private discussion <ArrowUpRight /></a></Button>
           </div>
         </article>)}
-      </div>
+      </div> : <p className="sm-package-empty">Package details are being prepared. Contact us for a tailored plan.</p>}
     </section></CmsPageBlock>
 
     <CmsPageBlock sectionId="faq"><section className="sm-faq section-pad">
@@ -174,7 +109,7 @@ function Web() {
       </div>
       <div className="sm-faq-cta reveal">
         <p>Still deciding? Let’s talk about which package fits your business.</p>
-        <Button variant="studio" asChild><a href={whatsapp} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
       </div>
     </section></CmsPageBlock>
 
