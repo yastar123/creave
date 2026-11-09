@@ -234,6 +234,28 @@ describe("CMS admin dashboard", () => {
     expect(screen.queryByRole("textbox", { name: "New field name" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Move section/ })).not.toBeInTheDocument();
     expect(writes.some(({ url }) => url === "/api/cms/admin/pages/home")).toBe(true);
+
+    fireEvent.click(await screen.findByRole("button", { name: /Selected work Gallery/ }));
+    fireEvent.change(screen.getByRole("textbox", { name: "headingStart value" }), {
+      target: { value: "A different" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Cover Image value" }), {
+      target: { value: "/uploads/work-cover.jpg" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => {
+      const saved = writes.at(-1)?.body["sections"] as Array<{ id: string; fields: Record<string, string> }>;
+      expect(saved?.find((section) => section.id === "work")?.fields).toMatchObject({
+        headingStart: "A different",
+        coverImage: "/uploads/work-cover.jpg",
+      });
+    });
+
+    fireEvent.click(await screen.findByRole("button", { name: /Industry tabs Cards/ }));
+    expect(await screen.findByRole("textbox", { name: "Cover Image value" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "heading value" })).toHaveValue(
+      "One studio — adapted to your business",
+    );
   });
 
   it("shows image and video upload controls directly in the homepage services section", async () => {
@@ -336,10 +358,21 @@ describe("CMS admin dashboard", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "bannerText value" }), {
       target: { value: "Winter studio hours" },
     });
+    fireEvent.change(screen.getByRole("textbox", { name: "hours value" }), {
+      target: { value: "Monday to Friday, 08:00–19:00" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "phone value" }), {
+      target: { value: "+264 81 555 0123" },
+    });
     expect(writes).toHaveLength(2);
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     await waitFor(
-      () => expect(writes.some(({ url }) => url === "/api/cms/admin/globals/settings")).toBe(true),
+      () => expect(writes.some(({ url, body }) =>
+        url === "/api/cms/admin/globals/settings"
+        && (body["content"] as Record<string, string>)["hours"] === "Monday to Friday, 08:00–19:00"
+        && (body["content"] as Record<string, string>)["phone"] === "+264 81 555 0123"
+        && (body["content"] as Record<string, string>)["bannerText"] === "Winter studio hours",
+      )).toBe(true),
       { timeout: 3000 },
     );
   }, 15_000);

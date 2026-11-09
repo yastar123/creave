@@ -4,37 +4,11 @@ import { useState } from 'react';
 import { ArrowUpRight, Plus, Minus } from 'lucide-react';
 import { StudioShell, useConfiguredWhatsapp } from '@/components/studio-shell';
 import { Button } from '@/components/ui/button';
-import { CmsPageBlock, CmsText } from '@/components/cms-sections';
+import { CmsPageBlock, CmsText, useCmsPageSections } from '@/components/cms-sections';
 import { pageHead } from '@/lib/studio-utils';
 import { useSiteContent } from '@/lib/site-content-context';
 import { defaultWebsitePackages } from '@/lib/studio-content';
-
-const faqs = [
-  {
-    q: 'What types of businesses need a website, and what is its real function?',
-    a: 'Any business that wants to be taken seriously needs a website. This includes service-based businesses, professionals, growing brands, and companies that rely on trust before a customer makes a decision.\n\nA website functions as your digital headquarters. It explains your business clearly, builds credibility, answers key questions, and supports your sales or inquiry process. While social media creates attention, your website provides structure, clarity, and confidence for people who want to learn more before taking action.\n\nIn short, a website turns interest into trust, and trust into meaningful business conversations.',
-  },
-  {
-    q: 'Do you provide after-sales support?',
-    a: 'Yes. Every package includes post-launch priority support — 30 days on Silver, 60 days on Gold, and ongoing support arrangements on Bespoke builds. After that period, we remain available for content refinements, updates and maintenance so your website keeps performing long after launch.',
-  },
-  {
-    q: 'Who owns the website and its assets?',
-    a: 'You do. Once the project is complete and settled, you own the website, its content, and its assets — domain, design files and copy. We build on flexible, no-lock-in platforms so nothing about your website is held hostage.',
-  },
-  {
-    q: 'Can I move my website to another hosting provider in the future?',
-    a: 'Yes. Our platforms are flexible and portable by design. If you ever decide to change hosting providers, your website and its data can be moved with you — no lock-in contracts, no technical barriers, and no penalty for leaving.',
-  },
-  {
-    q: 'How do payments work?',
-    a: 'Website packages are a one-time investment, with all prices excluding VAT. Work begins after the project is confirmed, and any third-party costs (such as domain renewals or hosting after the first year) are quoted transparently before they apply.',
-  },
-  {
-    q: 'What is the next step if I’m interested?',
-    a: 'Start with a private discussion. We talk through your goals, your audience and the structure your website needs, then recommend the package that fits — or scope a bespoke build if your requirements go beyond it. From there we move into discovery, design and launch.',
-  },
-];
+import { parseSocialMediaFaqs } from '@/lib/social-media-faqs';
 
 export const Route = createFileRoute('/web-solutions-namibia')({
   head: () => pageHead('Crevora Web Business Solutions Namibia — High Performance SEO and Revenue', 'Crevora provides strategic business website design and development services for companies in Namibia — strategy-led websites that build trust and turn attention into business.'),
@@ -44,12 +18,15 @@ export const Route = createFileRoute('/web-solutions-namibia')({
 function Web() {
   const [active, setActive] = useState<number | null>(0);
   const { services } = useSiteContent();
+  const sections = useCmsPageSections();
   const whatsappUrl = useConfiguredWhatsapp();
   const websiteService = services.find(service => service.to === '/web-solutions-namibia');
   const packages = websiteService?.packages ?? defaultWebsitePackages;
+  const faqs = parseSocialMediaFaqs(sections.find(section => section.id === 'faq')?.fields["items"] ?? '');
+  const approach = sections.find(section => section.id === 'approach')?.fields;
   return <StudioShell>
     <CmsPageBlock sectionId="hero"><section className="inner-hero">
-      <span className="eyebrow">BUSINESS WEBSITE DESIGN & DEVELOPMENT IN NAMIBIA</span>
+      <span className="eyebrow"><CmsText sectionId="hero" field="eyebrow">BUSINESS WEBSITE DESIGN & DEVELOPMENT IN NAMIBIA</CmsText></span>
       <h1><CmsText sectionId="hero" field="headingStart">Websites that build</CmsText><br /><span><CmsText sectionId="hero" field="headingAccent">trust</CmsText></span> <CmsText sectionId="hero" field="headingEnd">— and business.</CmsText></h1>
       <p><CmsText sectionId="hero" field="body">A business website is not just an online presence. It is where trust is built, credibility is proven, and real decisions are made.</CmsText></p>
       <div className="hero-actions">
@@ -60,7 +37,7 @@ function Web() {
     <CmsPageBlock sectionId="visual"><ServiceVisual kind="web" /></CmsPageBlock>
     <CmsPageBlock sectionId="intro"><section className="sm-intro section-pad">
       <div className="sm-intro-grid">
-        <span className="eyebrow">CREVORA — STRATEGIC CREATIVE AGENCY</span>
+        <span className="eyebrow"><CmsText sectionId="intro" field="eyebrow">CREVORA — STRATEGIC CREATIVE AGENCY</CmsText></span>
         <div>
           <p><CmsText sectionId="intro" field="paragraph1">Crevora provides strategic business website design and development services for companies in Namibia.</CmsText></p>
           <p><CmsText sectionId="intro" field="paragraph2">A business website is not just an online presence. It is where trust is built, credibility is proven, and real decisions are made. Our Business Website Solutions help brands clearly communicate who they are, what they offer, and why they matter. We focus on structure, messaging, and user experience so your website supports real business goals, not just looking good.</CmsText></p>
@@ -71,7 +48,7 @@ function Web() {
 
     <CmsPageBlock sectionId="packages"><section className="sm-packages section-pad" id="packages">
       <div className="section-heading reveal">
-        <span className="eyebrow">WEBSITE PACKAGES</span>
+        <span className="eyebrow"><CmsText sectionId="packages" field="eyebrow">WEBSITE PACKAGES</CmsText></span>
         <h2><CmsText sectionId="packages" field="headingStart">Choose the site</CmsText><br /><CmsText sectionId="packages" field="headingEnd">your business deserves.</CmsText></h2>
         <p><CmsText sectionId="packages" field="body">All website packages are strategy-led and tailored to each business’s goals, structure, and audience journey. All plans exclude VAT.</CmsText></p>
       </div>
@@ -86,7 +63,7 @@ function Web() {
           <div className="sm-package-body">
             <span className="sm-package-label">What you get</span>
             <ul>{pkg.features.map(f => <li key={f}>{f}</li>)}</ul>
-            <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Request private discussion <ArrowUpRight /></a></Button>
+            <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer"><CmsText sectionId="packages" field="buttonLabel">Request private discussion</CmsText> <ArrowUpRight /></a></Button>
           </div>
         </article>)}
       </div> : <p className="sm-package-empty">Package details are being prepared. Contact us for a tailored plan.</p>}
@@ -94,7 +71,7 @@ function Web() {
 
     <CmsPageBlock sectionId="faq"><section className="sm-faq section-pad">
       <div className="section-heading reveal">
-        <span className="eyebrow">EVERYTHING YOU NEED TO KNOW</span>
+        <span className="eyebrow"><CmsText sectionId="faq" field="eyebrow">EVERYTHING YOU NEED TO KNOW</CmsText></span>
         <h2><CmsText sectionId="faq" field="headingStart">Good questions,</CmsText><br /><CmsText sectionId="faq" field="headingEnd">clear answers.</CmsText></h2>
       </div>
       <div className="sm-faq-list">
@@ -104,26 +81,26 @@ function Web() {
             <span className="sm-faq-question">{faq.q}</span>
             <span className="sm-faq-icon">{active === i ? <Minus /> : <Plus />}</span>
           </Button>
-          {active === i && <div id={`web-faq-${i}`} className="sm-faq-body">{faq.a.split('\n\n').map(p => <p key={p}>{p}</p>)}</div>}
+          {active === i && <div id={`web-faq-${i}`} className="sm-faq-body">{faq.paragraphs.map(p => <p key={p}>{p}</p>)}</div>}
         </div>)}
       </div>
       <div className="sm-faq-cta reveal">
-        <p>Still deciding? Let’s talk about which package fits your business.</p>
-        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
+        <p><CmsText sectionId="faq" field="outro">Still deciding? Let’s talk about which package fits your business.</CmsText></p>
+        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer"><CmsText sectionId="faq" field="buttonLabel">Chat via WhatsApp</CmsText> <ArrowUpRight /></a></Button>
       </div>
     </section></CmsPageBlock>
 
     <CmsPageBlock sectionId="approach"><section className="approach-section">
       <div className="approach-copy reveal">
-        <span className="eyebrow">Business Web Solutions</span>
+        <span className="eyebrow"><CmsText sectionId="approach" field="eyebrow">Business Web Solutions</CmsText></span>
         <h2><CmsText sectionId="approach" field="headingStart">Built to last.</CmsText><br /><span><CmsText sectionId="approach" field="headingEnd">Designed to convert.</CmsText></span></h2>
         <p><CmsText sectionId="approach" field="body">Structure, messaging and user experience working together — so your website turns attention into trust, and trust into business.</CmsText></p>
         <div className="approach-pillars">{[
-          ['Strategy-led', 'Every page built around your business goals and audience journey.'],
-          ['No lock-in', 'Flexible platforms — you own your website and can move it anytime.'],
-          ['Full support', 'Priority post-launch support and content refinements included.'],
+          [approach?.["item0Title"] ?? 'Strategy-led', approach?.["item0Body"] ?? 'Every page built around your business goals and audience journey.'],
+          [approach?.["item1Title"] ?? 'No lock-in', approach?.["item1Body"] ?? 'Flexible platforms — you own your website and can move it anytime.'],
+          [approach?.["item2Title"] ?? 'Full support', approach?.["item2Body"] ?? 'Priority post-launch support and content refinements included.'],
         ].map(([t, d]) => <div key={t}><strong>{t}</strong><span>{d}</span></div>)}</div>
-        <Button variant="studioLight" asChild><Link to="/contact">Start the conversation <ArrowUpRight /></Link></Button>
+        <Button variant="studioLight" asChild><Link to="/contact"><CmsText sectionId="approach" field="buttonLabel">Start the conversation</CmsText> <ArrowUpRight /></Link></Button>
       </div>
     </section></CmsPageBlock>
   </StudioShell>;

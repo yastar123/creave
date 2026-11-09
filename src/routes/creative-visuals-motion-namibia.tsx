@@ -99,7 +99,7 @@ function CreativeVisualsMotion() {
     <CmsPageBlock sectionId="approach"><section className="sm-faq section-pad">
       <div className="sm-faq-cta reveal">
         <p><CmsText sectionId="approach" field="body">Ready to make your brand move?</CmsText></p>
-        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer">Chat via WhatsApp <ArrowUpRight /></a></Button>
+        <Button variant="studio" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer"><CmsText sectionId="approach" field="buttonLabel">Chat via WhatsApp</CmsText> <ArrowUpRight /></a></Button>
       </div>
     </section></CmsPageBlock>
   </StudioShell>;

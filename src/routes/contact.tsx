@@ -108,7 +108,7 @@ function ContactPage() {
 
   return <>
     <CmsPageBlock sectionId="hero"><section className="inner-hero">
-      <span className="eyebrow">CONTACT CREVORA</span>
+      <span className="eyebrow"><CmsText sectionId="hero" field="eyebrow">CONTACT CREVORA</CmsText></span>
       <h1><CmsText sectionId="hero" field="headingStart">Let’s talk about</CmsText><br /><CmsText sectionId="hero" field="headingEnd">your brand.</CmsText></h1>
       <p><CmsText sectionId="hero" field="body">Reaching out doesn’t mean you have to be ready with everything figured out. Sometimes it starts with a question, an idea, or a problem you want to solve.</CmsText></p>
       <div className="hero-actions">
@@ -118,7 +118,7 @@ function ContactPage() {
 
     <CmsPageBlock sectionId="intro"><section className="sm-intro section-pad">
       <div className="sm-intro-grid">
-        <span className="eyebrow">NO PRESSURE</span>
+        <span className="eyebrow"><CmsText sectionId="intro" field="eyebrow">NO PRESSURE</CmsText></span>
         <div>
           <p><CmsText sectionId="intro" field="paragraph1">No pressure. No commitments. Just a discussion.</CmsText></p>
           <p><CmsText sectionId="intro" field="paragraph2">If you’re exploring how to build stronger brand authority through strategy and content, we’re open to a private discussion.</CmsText></p>
@@ -133,7 +133,7 @@ function ContactPage() {
           <a href={`mailto:${contactEmail}`}>{contactEmail} <ArrowUpRight className="inline" size={18} /></a>
           <a href={`tel:${phoneHref}`}>{contactPhone}</a>
           <span>{settings["hours"] || 'Mon – Fri: 08:00 – 19:00'}</span>
-          <Button variant="studio" asChild><a href={whatsappBase} target="_blank" rel="noreferrer"><MessageCircle /> Chat via WhatsApp <ArrowUpRight /></a></Button>
+          <Button variant="studio" asChild><a href={whatsappBase} target="_blank" rel="noreferrer"><MessageCircle /> <CmsText sectionId="details" field="buttonLabel">Chat via WhatsApp</CmsText> <ArrowUpRight /></a></Button>
         </div>
         <p>{settings["address"] || 'Serving businesses across Namibia and international markets.'}</p>
       </div></CmsPageBlock>

@@ -170,6 +170,8 @@ describe("CMS collection API", () => {
   it("seeds only missing content keys and preserves admin edits", async () => {
     const seeded = JSON.parse(JSON.stringify(defaultSiteContent)) as SiteContent;
     seeded.services[0] = { ...seeded.services[0]!, menuNote: "Existing admin edit" };
+    delete seeded.services[0]!.price;
+    delete seeded.services[0]!.packages;
     const legacyMoraImage = "/__l5e/assets-v1/8a9bd257-c6c4-485c-98b4-3ddd1549f0bd/mora-brand.jpg";
     seeded.projects[0] = {
       ...seeded.projects[0]!,
@@ -199,7 +201,33 @@ describe("CMS collection API", () => {
 
     await initializeSiteContent(pool, defaultSiteContent);
     expect(seeded.services[0]?.menuNote).toBe("Existing admin edit");
+    expect(seeded.services[0]?.price).toBe("Price on request");
+    expect(seeded.services[0]?.packages).toEqual(defaultSiteContent.services[0]?.packages);
     expect(seeded.projects[0]?.image).toBe(defaultSiteContent.gallery[1]?.image);
     expect(seeded.projects[0]?.gallery[0]?.image).toBe(defaultSiteContent.gallery[1]?.image);
+  });
+
+  it("preserves an intentionally empty social media package list", async () => {
+    const seeded = JSON.parse(JSON.stringify(defaultSiteContent)) as SiteContent;
+    seeded.services[0] = { ...seeded.services[0]!, packages: [] };
+    const pool = {
+      query: async (sql: string, values?: unknown[]) => {
+        if (sql.includes("INSERT INTO public.cms_content_collections")) return { rows: [] };
+        if (sql.includes("SELECT collection_key, items")) {
+          return {
+            rows: Object.entries(seeded).map(([collection_key, items]) => ({ collection_key, items })),
+          };
+        }
+        if (sql.includes("UPDATE public.cms_content_collections")) {
+          const key = String(values?.[0] ?? "") as keyof SiteContent;
+          seeded[key] = JSON.parse(String(values?.[1] ?? "[]")) as never;
+          return { rows: [] };
+        }
+        return { rows: [] };
+      },
+    } as unknown as Pool;
+
+    await initializeSiteContent(pool, defaultSiteContent);
+    expect(seeded.services[0]?.packages).toEqual([]);
   });
 });

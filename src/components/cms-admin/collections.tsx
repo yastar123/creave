@@ -6,7 +6,7 @@ import {
   collectionItemIdentity,
   type SiteContentCollection,
 } from "@/lib/site-content-shared";
-import { defaultWebsitePackages } from "@/lib/studio-content";
+import { defaultSocialMediaPackages, defaultWebsitePackages } from "@/lib/studio-content";
 import { CmsMediaField } from "./media-field";
 
 import "./collections.css";
@@ -17,7 +17,7 @@ const collectionOptions: { key: SiteContentCollection; label: string; descriptio
   { key: "articles", label: "Articles", description: "Journal articles, cover images or videos, categories, and related services." },
   { key: "gallery", label: "Gallery", description: "Studio images and videos shown throughout the gallery and portfolio." },
   { key: "trustedBy", label: "Trusted by", description: "Client and partner names or approved logos." },
-  { key: "socials", label: "Social profiles", description: "Verified social profile links." },
+  { key: "socials", label: "Social profiles", description: "Edit Instagram, Facebook, TikTok, and other social profile names and URLs used on the site." },
   { key: "legalLinks", label: "Legal links", description: "Privacy and terms links shown in the footer." },
 ];
 
@@ -437,7 +437,10 @@ export function CmsCollections() {
         && recordFields["to"] === "/web-solutions-namibia"
         && !("packages" in recordFields)
         ? { packages: defaultWebsitePackages }
-        : {}),
+        : recordFields["to"] === "/social-media-management-namibia"
+          && !("packages" in recordFields)
+          ? { price: "Price on request", packages: defaultSocialMediaPackages }
+          : {}),
     };
     setFields(toEditorFields(mergedFields));
   }, [activeKey, creating, query.data, selectedIndex]);
@@ -577,7 +580,7 @@ export function CmsCollections() {
         <aside className="ca-record-list" aria-label={`${collection?.label ?? "Content"} records`}>
           <div className="ca-record-list-head">
             <span>{collection?.label} <i>{items.length}</i></span>
-            <button className="ca-button ca-button-dark" onClick={createRecord} type="button"><Plus size={14} /> New</button>
+            <button className="ca-button ca-button-dark" onClick={createRecord} type="button"><Plus size={14} /> {activeKey === "articles" ? "New article" : activeKey === "trustedBy" ? "Add client" : activeKey === "socials" ? "Add profile" : "New"}</button>
           </div>
           {itemButtons.length ? itemButtons.map((item) => (
             <button

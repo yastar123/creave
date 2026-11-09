@@ -71,7 +71,10 @@ export async function initializeSiteContent(pool: Pool, defaults: SiteContent) {
     "SELECT collection_key, items FROM public.cms_content_collections",
   );
   for (const row of existing.rows) {
-    const migrated = replaceLegacyAssetReferences(row.items, legacyImageReplacements);
+    const migratedAssets = replaceLegacyAssetReferences(row.items, legacyImageReplacements);
+    const migrated = row.collection_key === "services"
+      ? restoreMissingSocialMediaPackage(migratedAssets, validated)
+      : migratedAssets;
     if (JSON.stringify(migrated) === JSON.stringify(row.items)) continue;
     await pool.query(
       `UPDATE public.cms_content_collections
@@ -80,6 +83,26 @@ export async function initializeSiteContent(pool: Pool, defaults: SiteContent) {
       [row.collection_key, JSON.stringify(migrated)],
     );
   }
+}
+
+function restoreMissingSocialMediaPackage(value: unknown, defaults: SiteContent): unknown {
+  if (!Array.isArray(value)) return value;
+  const defaultService = defaults.services.find((service) => service.to === "/social-media-management-namibia");
+  if (!defaultService?.packages?.length) return value;
+
+  return value.map((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return item;
+    const service = item as Record<string, unknown>;
+    if (service["to"] !== defaultService.to || Object.prototype.hasOwnProperty.call(service, "packages")) {
+      return item;
+    }
+
+    return {
+      ...service,
+      ...(Object.prototype.hasOwnProperty.call(service, "price") ? {} : { price: defaultService.price }),
+      packages: defaultService.packages,
+    };
+  });
 }
 
 function replaceLegacyAssetReferences(value: unknown, replacements: Map<string, string>): unknown {

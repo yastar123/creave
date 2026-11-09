@@ -45,12 +45,18 @@ Use the email and password in `CMS_ADMIN_EMAIL` and `CMS_ADMIN_PASSWORD`. Older 
 
 ## Development on Replit or locally
 
-Install dependencies with `npm ci`, provide `DATABASE_URL`, `CMS_ADMIN_EMAIL`, `CMS_ADMIN_PASSWORD`, and `SESSION_SECRET`, then initialize a development database and start the app:
+Install dependencies with `npm ci` and provide `DATABASE_URL`, `CMS_ADMIN_EMAIL`, `CMS_ADMIN_PASSWORD`, and `SESSION_SECRET`. The schema consumed by `npm run db:push` is [server/schema.sql](./server/schema.sql). For a development database, explicitly select the development target. In PowerShell:
 
-```sh
-DB_PUSH_TARGET=development npm run db:push
+```powershell
+$env:NODE_ENV = "development"
+$env:DB_PUSH_TARGET = "development"
+npm run db:push
 npm run dev
 ```
+
+For bash/zsh, use `NODE_ENV=development DB_PUSH_TARGET=development npm run db:push`.
+The push script requires a target and refuses ambiguous production pushes. Never
+use a production `DATABASE_URL` with the development target.
 
 The development server listens on port 5000. The Replit workflow uses its managed development database and applies only the development schema.
 

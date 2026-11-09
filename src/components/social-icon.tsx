@@ -5,8 +5,18 @@ const paths: Record<string, string> = {
   Facebook: 'M13.5 21.9v-8.1h2.7l.4-3.2h-3.1V8.6c0-.9.3-1.5 1.6-1.5h1.7V4.2c-.3 0-1.3-.1-2.4-.1-2.4 0-4.1 1.5-4.1 4.2v2.3H7.6v3.2h2.7v8.1h3.2z',
 };
 
+const platformNames: Record<string, string> = {
+  ig: "Instagram",
+  instagram: "Instagram",
+  fb: "Facebook",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  linkedin: "LinkedIn",
+};
+
 export function SocialIcon({ name }: { name: string }) {
-  const d = paths[name];
+  const platform = platformNames[name.trim().toLowerCase()] ?? name;
+  const d = paths[platform];
   if (!d) return <span>{name}</span>;
   return <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false"><path d={d} /></svg>;
 }

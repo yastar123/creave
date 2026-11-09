@@ -21,7 +21,7 @@ function About() {
   const whatsappUrl = useConfiguredWhatsapp();
   return <StudioShell>
     <CmsPageBlock sectionId="hero"><section className="inner-hero">
-      <span className="eyebrow">ABOUT CREVORA</span>
+      <span className="eyebrow"><CmsText sectionId="hero" field="eyebrow">ABOUT CREVORA</CmsText></span>
       <h1><CmsText sectionId="hero" field="headlineStart">Building brands</CmsText><br />people <span><CmsText sectionId="hero" field="headlineAccent">trust,</CmsText></span><br /><CmsText sectionId="hero" field="headlineEnd">remember, and choose.</CmsText></h1>
       <p><CmsText sectionId="hero" field="body">Branding isn’t about being loud. It’s about clarity, consistency, and being the brand people choose when it matters.</CmsText></p>
       <div className="hero-actions">
@@ -31,7 +31,7 @@ function About() {
 
     <CmsPageBlock sectionId="intro"><section className="sm-intro section-pad">
       <div className="sm-intro-grid">
-        <span className="eyebrow">WHO WE ARE</span>
+        <span className="eyebrow"><CmsText sectionId="intro" field="eyebrow">WHO WE ARE</CmsText></span>
         <div>
           <p><CmsText sectionId="intro" field="paragraph1">Crevora is a strategic creative agency built around content-led strategy, helping businesses lead through digital authority.</CmsText></p>
           <p><CmsText sectionId="intro" field="paragraph2">In today’s Namibian digital space, many businesses are visible, but very few are truly chosen. Brands post consistently, chase trends, and invest in content, yet still struggle to earn trust, be remembered, or convert attention into real business outcomes.</CmsText></p>
@@ -42,11 +42,11 @@ function About() {
 
     <CmsPageBlock sectionId="direction"><section className="approach-section">
       <div className="approach-copy reveal">
-        <span className="eyebrow">OUR DIRECTION</span>
+        <span className="eyebrow"><CmsText sectionId="direction" field="eyebrow">OUR DIRECTION</CmsText></span>
         <h2><CmsText sectionId="direction" field="headlineStart">Ready to build</CmsText><br /><span><CmsText sectionId="direction" field="headlineAccent">authority,</CmsText></span> <CmsText sectionId="direction" field="headlineEnd">not just attention?</CmsText></h2>
         <p><CmsText sectionId="direction" field="body">We don’t build content for attention. We build content for trust, recall, and long-term growth.</CmsText></p>
         <div className="approach-pillars">{direction.map(([t, d], i) => <div key={t}><strong><CmsText sectionId="direction" field={`item${i}Title`}>{t}</CmsText></strong><span><CmsText sectionId="direction" field={`item${i}Body`}>{d}</CmsText></span></div>)}</div>
-        <Button variant="studioLight" asChild><Link to="/contact">Collaborate with us <ArrowUpRight /></Link></Button>
+        <Button variant="studioLight" asChild><Link to="/contact"><CmsText sectionId="direction" field="buttonLabel">Collaborate with us</CmsText> <ArrowUpRight /></Link></Button>
       </div>
     </section></CmsPageBlock>
 

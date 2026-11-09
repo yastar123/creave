@@ -96,14 +96,14 @@ export function ServiceShowcase() {
   const fallbackImages = [svcSocial, gallery[2]?.image ?? gallery[0]?.image, svcMotion, svcWeb];
   const chips = [['♥ 1.2K', 'Reels · TikTok'], ['Aa', 'Logo · Colour'], ['● REC', '4K · Motion'], ['98', 'Speed score']];
   return <section className="ss-section" id="services">
-    <div className="ss-head"><span className="eyebrow">(03) — What we do</span><h2><CmsText sectionId="showcase" field="heading">Four services. One clear direction.</CmsText></h2><Link to="/services" className="studio-button studio-button-outline inline-flex items-center">All services <ArrowUpRight size={16} /></Link></div>
+    <div className="ss-head"><span className="eyebrow"><CmsText sectionId="showcase" field="eyebrow">(03) — What we do</CmsText></span><h2><CmsText sectionId="showcase" field="heading">Four services. One clear direction.</CmsText></h2><Link to="/services" className="studio-button studio-button-outline inline-flex items-center"><CmsText sectionId="showcase" field="buttonLabel">All services</CmsText> <ArrowUpRight size={16} /></Link></div>
     <div className="ss-grid">{services.map((s, i) => {
       const service = resolveCmsMedia(s, [s.to, s.title], serviceOverrides);
       const chip = chips[i] ?? [s.tags[0] ?? s.title, s.tags.slice(1, 3).join(' · ')];
       return <Link key={s.title} to={s.to} className={`ss-card ss-card-${i}`}>
       {(service.image || service.video || fallbackImages[i]) && <SiteMedia src={service.image || fallbackImages[i]} video={service.video} alt="" loading="lazy" />}
       <span className="ss-shade" />
-      <span className="ss-top"><span className="ss-num">0{i + 1}</span>{i === 0 ? <span className="ss-pill">Core focus</span> : <span className="ss-pill">{chip[1]}</span>}</span>
+      <span className="ss-top"><span className="ss-num">0{i + 1}</span>{i === 0 ? <span className="ss-pill"><CmsText sectionId="showcase" field="coreFocusLabel">Core focus</CmsText></span> : <span className="ss-pill">{chip[1]}</span>}</span>
       <span className="ss-float" aria-hidden="true">{chip[0]}</span>
       <span className="ss-body"><h3>{s.title}</h3><span className="ss-tags">{s.tags.slice(0, 3).map(t => <span key={t}>{t}</span>)}</span></span>
       <span className="ss-arrow"><ArrowUpRight /></span>

@@ -11,6 +11,7 @@ import { usePublicCmsGlobals, type CmsGlobals } from '@/lib/cms-client';
 import { defaultCmsGlobals } from '@/lib/cms-shared';
 import { CMS_PREVIEW_MESSAGE, isCmsPreviewFrame, isCmsPreviewUpdate } from '@/lib/cms-preview';
 import { useSiteContent } from '@/lib/site-content-context';
+import { resolveSocialProfiles } from '@/lib/social-profile-links';
 
 export const whatsapp = 'https://wa.me/264815781719?text=Hi%20CREVORA%2C%20I%27d%20love%20to%20talk%20about%20my%20brand.';
 const nav = [{ title: 'Services', to: '/services' }, { title: 'About', to: '/about' }, { title: 'Journal', to: '/journal' }, { title: 'Contact', to: '/contact' }] as const;
@@ -103,13 +104,7 @@ export function StudioShell({ children, darkHeader = false }: { children: ReactN
   const legalFooterLinks = Object.prototype.hasOwnProperty.call(cmsGlobals.footer, "legalLinks")
     ? parseLinks(cmsGlobals.footer["legalLinks"], [])
     : legalLinks;
-  const socialLinks = lines(cmsGlobals.footer["socialLinks"]).map(line => {
-    const [name, url] = line.split('|').map(part => part?.trim());
-    return name && url && /^https?:\/\//i.test(url) ? { name, url } : null;
-  }).filter((item): item is { name: string; url: string } => item !== null);
-  const renderedSocialLinks = Object.prototype.hasOwnProperty.call(cmsGlobals.footer, "socialLinks")
-    ? socialLinks
-    : socials;
+  const renderedSocialLinks = resolveSocialProfiles(socials, cmsGlobals.footer["socialLinks"]);
   const openServices = () => { window.clearTimeout(closeTimer.current); setServicesOpen(true); };
   const closeServices = () => { window.clearTimeout(closeTimer.current); closeTimer.current = window.setTimeout(() => setServicesOpen(false), 140); };
   useEffect(() => () => window.clearTimeout(closeTimer.current), []);

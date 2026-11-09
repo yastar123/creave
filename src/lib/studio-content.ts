@@ -19,8 +19,22 @@ export const gallery = [
   { title: 'Form', category: 'Visual exploration', image: chrome, alt: 'Sculptural silver chrome ribbons' },
 ];
 
+export const defaultSocialMediaPackages = [
+  {
+    name: 'Social Media 360°',
+    price: 'Price on request',
+    period: 'monthly',
+    description: 'A tailored monthly social media plan shaped around your brand, audience, and business goals.',
+    features: [
+      'Social media strategy and content planning',
+      'Organic short-form video for Instagram Reels and TikTok',
+      'Content management and performance reporting',
+    ],
+  },
+];
+
 export const services = [
-  { title: 'Social Media Marketing & Branding', to: '/social-media-management-namibia', menuNote: 'Core focus — strategy, short-form video, management', short: 'Social Media Marketing\n& Branding', description: 'Our core focus. We build your brand on social media through strategy, organic short-form video for Instagram Reels and TikTok, content planning, management and reporting — so the right audience finds you and turns into real business.', tags: ['Strategy & positioning', 'Organic short-form video', 'Management & reporting'], detail: 'From brand positioning, content pillars and recurring series to production, community engagement and performance analysis, every creative decision is tied to your business goals.' },
+  { title: 'Social Media Marketing & Branding', to: '/social-media-management-namibia', menuNote: 'Core focus — strategy, short-form video, management', short: 'Social Media Marketing\n& Branding', description: 'Our core focus. We build your brand on social media through strategy, organic short-form video for Instagram Reels and TikTok, content planning, management and reporting — so the right audience finds you and turns into real business.', tags: ['Strategy & positioning', 'Organic short-form video', 'Management & reporting'], detail: 'From brand positioning, content pillars and recurring series to production, community engagement and performance analysis, every creative decision is tied to your business goals.', price: 'Price on request', packages: defaultSocialMediaPackages },
   { title: 'Brand Identity & Visual', to: '/brand-identity-namibia', menuNote: 'Logo systems, guidelines, rebranding', short: 'Brand Identity\n& Visual', description: 'We build or refine the visual identity of your business — logo systems, colour, typography direction, graphic elements and brand guidelines.', tags: ['Logo systems', 'Brand guidelines', 'Rebranding'], detail: 'A coherent identity applied across your business communication, designed to work wherever your brand shows up.' },
   { title: 'Creative Content & Motion', to: '/creative-visuals-motion-namibia', menuNote: 'Campaign assets, video and motion', short: 'Creative Content\n& Motion', description: 'Social media designs, campaign assets, short-form video, editing and motion graphics that help your brand communicate with more impact.', tags: ['Campaign assets', 'Video editing', 'Motion graphics'], detail: 'We shape creative concepts, visuals and motion around your story, audience and project scope.' },
   { title: 'Web & Digital Solutions', to: '/web-solutions-namibia', menuNote: 'Business websites and landing pages', short: 'Web & Digital\nSolutions', description: 'Business websites, landing pages and responsive digital solutions that give your brand a clear, professional home online.', tags: ['Business websites', 'Landing pages', 'Responsive design'], detail: 'Clear structure, intentional design and mobile-first development within the scope of each project.' },

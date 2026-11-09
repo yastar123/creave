@@ -42,6 +42,7 @@ import { getCmsPageDefaultSections } from "@/lib/cms-page-defaults";
 import type { CmsSection, CmsSectionType } from "@/lib/cms-shared";
 import { CMS_PREVIEW_MESSAGE, CMS_PREVIEW_PARAM, CMS_PREVIEW_READY } from "@/lib/cms-preview";
 import { isCmsMediaOverridesJson, parseCmsMediaOverrides, validateCmsMediaOverrides, type CmsMediaOverride } from "@/lib/cms-media-overrides";
+import { resolveSocialProfiles, serializeSocialProfiles } from "@/lib/social-profile-links";
 import { CmsInbox } from "./inbox";
 import { CmsOverview } from "./overview";
 import { CmsCollections } from "./collections";
@@ -81,6 +82,26 @@ const prettyKey = (key: string) =>
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .replace(/[-_]+/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase()));
+
+function pageFieldLabel(key: string, sectionId?: string) {
+  const sectionLabels: Record<string, Record<string, string>> = {
+    work: {
+      headingStart: "Different by design — first line",
+      headingAccent: "Different by design — second line",
+      coverImage: "Our work background image",
+      coverVideo: "Our work background video",
+    },
+    industries: {
+      heading: "One studio adapted to your business — heading",
+      coverImage: "Industry showcase background image",
+      coverVideo: "Industry showcase background video",
+    },
+    trusted: {
+      heading: "Trusted by heading",
+    },
+  };
+  return sectionLabels[sectionId ?? ""]?.[key] ?? prettyKey(key);
+}
 
 const mediaKind = (key: string) => {
   const normalized = key.toLowerCase();
@@ -335,13 +356,17 @@ function mergeGlobalContent(
   return {
     ...globalContentDefaults.footer,
     ...settingsDefaults,
-    ...(!Object.prototype.hasOwnProperty.call(content, "socialLinks") && collections
-      ? { socialLinks: collections.socials.map(({ name, url }) => `${name}|${url}`).join("\n") }
-      : {}),
     ...(!Object.prototype.hasOwnProperty.call(content, "legalLinks") && collections
       ? { legalLinks: collections.legalLinks.map(({ title, to }) => `${title}|${to}`).join("\n") }
       : {}),
     ...content,
+    ...(collections
+      ? {
+          socialLinks: serializeSocialProfiles(
+            resolveSocialProfiles(collections.socials, content["socialLinks"]),
+          ),
+        }
+      : {}),
   };
 }
 
@@ -472,10 +497,10 @@ function FieldRows({
                   }}
                 />
               </>
-            ) : <span className="ca-field-key-label">{prettyKey(key)}</span>}
+            ) :             <span className="ca-field-key-label">{pageFieldLabel(key, sectionId)}</span>}
           </div>
           <div className="ca-field-value">
-            <span>Value <em>{globalKey && globalListKind(key, globalKey) ? "Add, edit, or remove each item below" : key === "mediaItems" ? "Overrides for image/video cards in this section" : mediaKind(key) ? "Upload or choose media for this section" : "Use a new line for each link or item"}</em></span>
+            <span>Value <em>{globalKey && globalListKind(key, globalKey) ? "Add, edit, or remove each item below" : key === "mediaItems" ? "Overrides for image/video cards in this section" : sectionId === "faq" && key === "items" ? "One FAQ per line: question | answer paragraph. Add another | for each new paragraph." : mediaKind(key) ? "Upload or choose media for this section" : "Use a new line for each link or item"}</em></span>
             {globalKey && globalListKind(key, globalKey) ? (
               <CmsGlobalListField
                 kind={globalListKind(key, globalKey)!}
@@ -1417,7 +1442,7 @@ export function CmsDashboard({ onLogout }: { onLogout: () => void }) {
                     ? "Edit your contact details, social links destination, business hours, logo, and the optional announcement banner shown across the site."
                     : globalKey === "navbar"
                       ? "Manage the header note, desktop and mobile navigation, and service menu labels. Add, edit, or remove each link here. The logo is managed in Site settings."
-                      : "Manage footer copy, contact details, navigation/legal links, social profiles, and labels. The shared logo and WhatsApp destination are managed in Site settings."}</p>
+                      : "Manage footer copy, contact details, navigation/legal links, and labels. Social profiles are managed in Data collections and take priority over legacy footer links. The shared logo and WhatsApp destination are managed in Site settings."}</p>
                 </div>
                 {globalKey === "footer" && dynamicCollectionsQuery.isError && (
                   <div className="ca-save-error" role="alert">

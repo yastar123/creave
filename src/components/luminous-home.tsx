@@ -150,13 +150,13 @@ export function IndustryTabs() {
       <h2>{industrySection?.["heading"] ?? 'One studio — adapted to your business'}</h2>
       <div className="lh-pills" role="tablist">{tabs.map(([n], i) => <button key={n} role="tab" aria-selected={i === t} className={i === t ? 'on' : ''} onClick={() => setT(i)}>{n}</button>)}</div>
     </div>
-    <div className="lh-row"><p>Find out how CREVORA fits your brand, audience and goals.</p><a href={whatsappUrl} target="_blank" rel="noreferrer" className="lh-btn">Discover possibilities <ArrowRight size={16} /></a></div>
+    <div className="lh-row"><p>{industrySection?.["body"] ?? 'Find out how CREVORA fits your brand, audience and goals.'}</p><a href={whatsappUrl} target="_blank" rel="noreferrer" className="lh-btn">{industrySection?.["buttonLabel"] ?? 'Discover possibilities'} <ArrowRight size={16} /></a></div>
   </section>;
 }
 
 export function StatsBlock() {
   const fields = useCmsPageSections().find(section => section.id === 'stats')?.fields;
-  return <section className="lh-stats"><h2>{fields?.["heading"] ?? 'Real results, not just a portfolio.'}<br /><span>{fields?.["body"] ?? '10+ brands. 4 disciplines. 1 clear direction.'}</span></h2><p>Based on professional experience across Namibian and international brands.</p></section>;
+  return <section className="lh-stats"><h2>{fields?.["heading"] ?? 'Real results, not just a portfolio.'}<br /><span>{fields?.["body"] ?? '10+ brands. 4 disciplines. 1 clear direction.'}</span></h2><p>{fields?.["note"] ?? 'Based on professional experience across Namibian and international brands.'}</p></section>;
 }
 
 export function WhyCards() {

@@ -115,7 +115,7 @@ describe("CMS PostgreSQL content collections", () => {
     fireEvent.change(screen.getByRole("combobox", { name: "Content collection" }), {
       target: { value: "articles" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "New" }));
+    fireEvent.click(screen.getByRole("button", { name: "New article" }));
     expect(await screen.findByRole("textbox", { name: "Image" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Video" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Image Alt" })).toBeInTheDocument();
@@ -162,5 +162,107 @@ describe("CMS PostgreSQL content collections", () => {
       price: "N$ 1 000",
       features: ["Responsive design", "CMS training"],
     });
+  });
+
+  it("creates an article with a cover and body content", async () => {
+    const { getContent } = setupCollections();
+    await screen.findByRole("heading", { name: "Content collections" });
+    fireEvent.change(screen.getByRole("combobox", { name: "Content collection" }), {
+      target: { value: "articles" },
+    });
+    fireEvent.click(await screen.findByRole("button", { name: "New article" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Slug" }), {
+      target: { value: "a-new-journal-entry" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Category" }), {
+      target: { value: "Studio news" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Title" }), {
+      target: { value: "A new journal entry" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Excerpt" }), {
+      target: { value: "A short introduction to this article." },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Date" }), {
+      target: { value: "2026-11-10" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Author" }), {
+      target: { value: "CREVORA Studio" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Body" }), {
+      target: { value: "First paragraph.\nSecond paragraph." },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Related" }), {
+      target: { value: JSON.stringify({ label: "Services", to: "/services" }) },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Image" }), {
+      target: { value: "/uploads/journal-cover.jpg" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Image Alt" }), {
+      target: { value: "Journal cover" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save record" }));
+
+    await screen.findByText("Saved to PostgreSQL");
+    expect(getContent().articles.at(-1)).toMatchObject({
+      slug: "a-new-journal-entry",
+      image: "/uploads/journal-cover.jpg",
+      body: ["First paragraph.", "Second paragraph."],
+    });
+  });
+
+  it("creates a Trusted by client with an editable logo and name", async () => {
+    const { getContent } = setupCollections();
+    await screen.findByRole("heading", { name: "Content collections" });
+    fireEvent.change(screen.getByRole("combobox", { name: "Content collection" }), {
+      target: { value: "trustedBy" },
+    });
+    fireEvent.click(await screen.findByRole("button", { name: "Add client" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Name" }), {
+      target: { value: "New client" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Logo" }), {
+      target: { value: "/uploads/client-logo.svg" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save record" }));
+
+    await screen.findByText("Saved to PostgreSQL");
+    expect(getContent().trustedBy.at(-1)).toMatchObject({
+      name: "New client",
+      logo: "/uploads/client-logo.svg",
+    });
+  });
+
+  it("adds a social profile to the collection used by the site footer", async () => {
+    const { getContent } = setupCollections();
+    await screen.findByRole("heading", { name: "Content collections" });
+    fireEvent.change(screen.getByRole("combobox", { name: "Content collection" }), {
+      target: { value: "socials" },
+    });
+    fireEvent.click(await screen.findByRole("button", { name: "Add profile" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Name" }), {
+      target: { value: "Instagram" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Url" }), {
+      target: { value: "https://instagram.com/crevora" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save record" }));
+
+    await screen.findByText("Saved to PostgreSQL");
+    expect(getContent().socials.at(-1)).toEqual({
+      name: "Instagram",
+      url: "https://instagram.com/crevora",
+    });
+  });
+
+  it("provides an editable social package with a safe price-on-request default", async () => {
+    setupCollections();
+    await screen.findByRole("heading", { name: "Content collections" });
+    fireEvent.click(screen.getByRole("button", { name: /social-media-management-namibia/ }));
+
+    expect(await screen.findByRole("textbox", { name: "Package 1 name" })).toHaveValue("Social Media 360°");
+    expect(screen.getByRole("textbox", { name: "Package 1 price" })).toHaveValue("Price on request");
+    expect((screen.getByRole("textbox", { name: "Package 1 features" }) as HTMLTextAreaElement).value)
+      .toContain("Organic short-form video");
   });
 });

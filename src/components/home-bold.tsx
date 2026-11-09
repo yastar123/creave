@@ -21,17 +21,17 @@ export function BoldHero() {
   return <section className="hv-hero home-hero hv-dark" aria-labelledby="hv-hero-title">
     <SiteMedia className="hv-hero-cover" src={hero?.["image"] || heroImage} video={hero?.["video"]} alt={hero?.["imageAlt"] || 'Sculpted obsidian forms in monochrome light'} loading="eager" />
     <div className="hv-hero-masthead">
-      <div className="hv-hero-meta"><span>Independent creative studio</span><span>Windhoek, Namibia</span></div>
+      <div className="hv-hero-meta"><span>{hero?.["metaLabel"] ?? 'Independent creative studio'}</span><span>{hero?.["metaLocation"] ?? 'Windhoek, Namibia'}</span></div>
       <p className="hv-hero-kicker">{hero?.["kicker"] ?? 'Social media & high-conversion websites'}</p>
       <h1 id="hv-hero-title">{hero?.["heading"] ?? 'Building brands people trust, remember, and choose.'}</h1>
       <p className="hv-hero-blurb">{hero?.["body"] ?? 'We engineer high-performance social media strategies, short-form video systems, and custom conversion websites that directly impact your bottom line.'}</p>
     </div>
     <div className="hv-hero-bottom">
       <div className="hv-hero-intro">
-        <span>Social media. Identity. Content. Digital.</span>
+        <span>{hero?.["bottomLabel"] ?? 'Social media. Identity. Content. Digital.'}</span>
       </div>
       <div className="hv-hero-links">
-        <Button asChild variant="ghost" className="hv-hero-link"><Link to="/contact">Start a conversation <ArrowUpRight /></Link></Button>
+        <Button asChild variant="ghost" className="hv-hero-link"><Link to="/contact">{hero?.["buttonLabel"] ?? 'Start a conversation'} <ArrowUpRight /></Link></Button>
         {featuredProject && <Button asChild variant="ghost" className="hv-hero-project"><Link to="/work/$slug" params={{ slug: featuredProject.slug }}><span>{featuredProject.name} <small>{featuredProject.category} · Portfolio</small></span><ArrowUpRight /></Link></Button>}
       </div>
     </div>
@@ -96,7 +96,7 @@ export function BoldServices() {
     { video: 'https://assets.mixkit.co/videos/1735/1735-720.mp4', label: 'Developer building a website on a laptop' },
   ];
   return <section className="hv-svc hv-light" id="services" aria-labelledby="hv-services-title">
-    <div className="hv-head"><span className="hv-eyebrow">What we do</span><h2 id="hv-services-title">{serviceSection?.["headingStart"] ?? 'Our'} <em>{serviceSection?.["headingAccent"] ?? 'services.'}</em></h2><div className="hv-svc-actions"><Button variant="ghost" size="icon" className="hv-video-toggle" aria-label={paused ? 'Play service videos' : 'Pause service videos'} title={paused ? 'Play videos' : 'Pause videos'} onClick={() => setPaused(value => !value)}>{paused ? <Play /> : <Pause />}</Button><Link to="/services" className="hv-svc-all">{serviceSection?.["buttonLabel"] ?? 'All services'} <ArrowUpRight size={20} /></Link></div></div>
+    <div className="hv-head"><span className="hv-eyebrow">{serviceSection?.["eyebrow"] ?? 'What we do'}</span><h2 id="hv-services-title">{serviceSection?.["headingStart"] ?? 'Our'} <em>{serviceSection?.["headingAccent"] ?? 'services.'}</em></h2><div className="hv-svc-actions"><Button variant="ghost" size="icon" className="hv-video-toggle" aria-label={paused ? 'Play service videos' : 'Pause service videos'} title={paused ? 'Play videos' : 'Pause videos'} onClick={() => setPaused(value => !value)}>{paused ? <Play /> : <Pause />}</Button><Link to="/services" className="hv-svc-all">{serviceSection?.["buttonLabel"] ?? 'All services'} <ArrowUpRight size={20} /></Link></div></div>
     <div className="hv-svc-grid" data-card-motion="on" ref={gridRef}>{[0, 1].map(column => <div className="hv-svc-column" key={column}>
       {services.map((s, i) => {
         if (i % 2 !== column) return null;
@@ -141,7 +141,7 @@ export function BoldTrusted() {
   });
   const heading = trustedSection?.fields["heading"];
   return <section className="hv-trusted hv-dark" aria-labelledby="hv-trusted-title">
-    <div className="hv-head hv-head-sm"><h2 id="hv-trusted-title">{heading ?? 'Trusted by businesses across Namibia'}</h2></div>
+    <div className="hv-head hv-head-sm"><h2 id="hv-trusted-title">{heading ?? 'Trusted by businesses across Namibia'}</h2><p>{trustedSection?.fields["note"] ?? 'Businesses across Namibia'}</p></div>
     <div className="hv-marquee"><ul>{loop.map((c, i) => <li key={i} aria-hidden={i >= trustedBy.length}>{c.logo ? <SiteImage src={c.logo} alt="" loading="lazy" /> : null}<span>{c.name}</span></li>)}</ul></div>
   </section>;
 }
@@ -158,11 +158,11 @@ export function BoldWhy() {
     [Gauge, 'Measured', 'Clear reporting so you see what works — and what’s next.'],
   ] as const;
   return <section className="hv-why hv-dark">
-    <div className="hv-head"><span className="hv-eyebrow">Why CREVORA</span><h2>{fields?.["headingStart"] ?? 'Not more noise.'} <em>{fields?.["headingAccent"] ?? 'More meaning.'}</em></h2></div>
+    <div className="hv-head"><span className="hv-eyebrow">{fields?.["eyebrow"] ?? 'Why CREVORA'}</span><h2>{fields?.["headingStart"] ?? 'Not more noise.'} <em>{fields?.["headingAccent"] ?? 'More meaning.'}</em></h2></div>
     <div className="hv-why-grid">{items.map(([Icon, title, body], i) => <div key={title} className="hv-why-card">
       <span className="hv-why-top"><span className="hv-why-num">0{i + 1}</span><Icon size={28} strokeWidth={1.5} /></span>
       <h3>{fields?.[`item${i}Title`] ?? title}</h3><p>{fields?.[`item${i}Body`] ?? body}</p>
     </div>)}</div>
-    <div className="hv-why-cta"><a href={whatsappUrl} target="_blank" rel="noreferrer" className="hv-btn hv-btn-light">Book a discovery call <ArrowRight size={18} /></a></div>
+    <div className="hv-why-cta"><a href={whatsappUrl} target="_blank" rel="noreferrer" className="hv-btn hv-btn-light">{fields?.["buttonLabel"] ?? 'Book a discovery call'} <ArrowRight size={18} /></a></div>
   </section>;
 }
