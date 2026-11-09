@@ -301,6 +301,7 @@ function ServicePackagesField({
 
   return (
     <div className="ca-nested-packages">
+      <p>To edit Social Media pricing or package details, select its Services record, update the fields below, then choose Save record.</p>
       {validPackages.length === 0 && <p>No packages yet. Add the first package below.</p>}
       {validPackages.map((item, index) => (
         <fieldset className="ca-nested-package" key={index}>

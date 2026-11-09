@@ -264,5 +264,25 @@ describe("CMS PostgreSQL content collections", () => {
     expect(screen.getByRole("textbox", { name: "Package 1 price" })).toHaveValue("Price on request");
     expect((screen.getByRole("textbox", { name: "Package 1 features" }) as HTMLTextAreaElement).value)
       .toContain("Organic short-form video");
+    expect(screen.getByText(/select its Services record, update the fields below, then choose Save record/i)).toBeInTheDocument();
+  });
+
+  it("saves updated Social Media package pricing from the admin editor", async () => {
+    const { writes, getContent } = setupCollections();
+    await screen.findByRole("heading", { name: "Content collections" });
+    fireEvent.click(screen.getByRole("button", { name: /social-media-management-namibia/ }));
+    fireEvent.change(await screen.findByRole("textbox", { name: "Package 1 price" }), {
+      target: { value: "N$ 4,500 / month" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save record" }));
+
+    await screen.findByText("Saved to PostgreSQL");
+    const savedService = getContent().services.find((service) => service.to === "/social-media-management-namibia");
+    expect(savedService?.packages?.[0]?.price).toBe("N$ 4,500 / month");
+    expect(writes.at(-1)?.key).toBe("services");
+    const savedPackages = (writes.at(-1)?.items.find((item) =>
+      (item as { to?: string }).to === "/social-media-management-namibia",
+    ) as { packages: Array<{ price: string }> }).packages;
+    expect(savedPackages[0]?.price).toBe("N$ 4,500 / month");
   });
 });

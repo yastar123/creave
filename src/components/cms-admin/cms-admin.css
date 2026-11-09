@@ -342,6 +342,7 @@
 .ca-media-library-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--ca-line); }
 .ca-media-library-heading h1 { margin: 8px 0 7px; color: var(--ca-ink); font-size: clamp(28px, 3vw, 39px); font-weight: 500; letter-spacing: -.055em; }
 .ca-media-library-heading > div:first-child > p:last-child { margin: 0; color: #777b76; font-size: 12px; }
+.ca-media-library-heading .ca-media-library-help { max-width: 620px; margin: 9px 0 0; color: #777b76; font-size: 11px; line-height: 1.6; }
 .ca-media-library-upload { display: grid; justify-items: end; gap: 7px; }
 .ca-media-library-upload > span { color: #858a82; font-size: 9px; text-align: right; }
 .ca-media-library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 22px; }

@@ -732,7 +732,7 @@ html:not(.fx-ready) .fx-curtain { display: none; }
 .sw-section-cover .site-image-fallback { opacity: .9; }
 .sw-head { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px; margin-bottom: clamp(48px, 7vw, 96px); }
 .sw-head .eyebrow { grid-column: 1 / -1; }
-.sw-head h2 { font-size: clamp(56px, 11vw, 188px); line-height: 1.02; padding-block: .08em .14em; letter-spacing: -0.06em; font-weight: 500; text-wrap: balance; }
+.sw-head h2 { font-size: clamp(56px, 11vw, 188px); line-height: 1.12; padding-block: .12em .2em; letter-spacing: -0.06em; font-weight: 500; text-wrap: balance; }
 .sw-head h2 em { color: var(--studio-signal); }
 .sw-stack { display: flex; flex-direction: column; gap: 10vh; }
 .sw-card { position: sticky; height: min(82vh, 820px); transform: scale(var(--sw-scale, 1)); transform-origin: 50% 0; will-change: transform; overflow: hidden; border-radius: 4px; background: var(--studio-ink); }
@@ -1359,7 +1359,7 @@ img[loading="lazy"] { border-radius: inherit; }
 .hv-eyebrow { display: inline-block; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; opacity: .6; margin-bottom: 14px; }
 .hv-head { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px; margin-bottom: 48px; }
 .hv-head .hv-eyebrow { grid-column: 1 / -1; margin-bottom: -10px; }
-.hv-head h2 { font-size: clamp(48px, 8vw, 128px); line-height: 1.08; padding-block: .06em .12em; letter-spacing: -0.05em; font-weight: 600; margin: 0; text-wrap: balance; }
+.hv-head h2 { font-size: clamp(48px, 8vw, 128px); line-height: 1.14; padding-block: .12em .2em; letter-spacing: -0.05em; font-weight: 600; margin: 0; text-wrap: balance; }
 .hv-head-sm h2 { font-size: clamp(22px, 2.4vw, 34px); letter-spacing: -0.02em; line-height: 1.15; }
 .hv-head em { font-family: var(--font-serif); font-style: italic; font-weight: 400; }
 .hv-btn { display: inline-flex; align-items: center; gap: 10px; padding: 16px 28px; border-radius: 999px; font-size: 16px; font-weight: 600; transition: transform .3s var(--ease), background .3s, color .3s; white-space: nowrap; }

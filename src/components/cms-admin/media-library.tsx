@@ -50,6 +50,7 @@ export function CmsMediaLibrary() {
           <p className="ca-overline">SITE ASSETS</p>
           <h1>Media library</h1>
           <p>Upload and reuse approved images and videos throughout your website.</p>
+          <p className="ca-media-library-help">To replace a broken image, logo, or homepage cover, upload it here, then open the related page or Site settings and choose Browse media on that field.</p>
         </div>
         <div className="ca-media-library-upload">
           <input
